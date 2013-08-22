@@ -14,8 +14,8 @@
 	<MaxModelNumber>0x07</MaxModelNumber>
 	<TargetDevices>
 		<TargetDevice Name="Development" HostBased="FALSE">
-			<PreviousLNSTemplateName></PreviousLNSTemplateName>
-			<HardwareTemplate></HardwareTemplate>
+			<PreviousLNSTemplateName>demo</PreviousLNSTemplateName>
+			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
 			<Compiler DisableOptimizer="TRUE" RelaxedCasting="FALSE">
 				<Defines>_DEBUG</Defines>
 				<DebugKernelOptions UseDebugKernel="TRUE" NodeRecoveryOnly="FALSE" NoNodeRecovery="FALSE" NoEventNotify="FALSE" NoResetEvent="FALSE" NoFunctionExecute="FALSE" ExpandStatements="TRUE">
@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x27C6</BootID>
+				<BootID>0x6A28</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -46,8 +46,8 @@
 			</TargetConfiguration>
 		</TargetDevice>
 		<TargetDevice Name="Release" HostBased="FALSE">
-			<PreviousLNSTemplateName></PreviousLNSTemplateName>
-			<HardwareTemplate></HardwareTemplate>
+			<PreviousLNSTemplateName>demo</PreviousLNSTemplateName>
+			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
 			<Compiler DisableOptimizer="FALSE" RelaxedCasting="FALSE">
 				<Defines></Defines>
 				<DebugKernelOptions UseDebugKernel="FALSE" NodeRecoveryOnly="FALSE" NoNodeRecovery="FALSE" NoEventNotify="FALSE" NoResetEvent="FALSE" NoFunctionExecute="FALSE" ExpandStatements="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x0C88</BootID>
+				<BootID>0x3E21</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -102,11 +102,11 @@
 	</SourceFileList>
 	<Interface>
 		<Dependencies>
-			<BIF>0x0</BIF>
+			<BIF>0xD3C9</BIF>
 			<BF2>0x0</BF2>
 			<XF2>0x0</XF2>
 			<XF3>0x0</XF3>
-			<DRF>0x0</DRF>
+			<DRF>0x76C61E72</DRF>
 		</Dependencies>
 	</Interface>
 	<DeviceTemplatePackage NamedFblocks="TRUE" UseFTPCPMode="FALSE" UseExternalNames="TRUE">

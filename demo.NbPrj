@@ -7,6 +7,9 @@
 	<IncludeSearchPath></IncludeSearchPath>
 	<DefaultTransceiver>7</DefaultTransceiver>
 	<DeviceTemplateFileNames>
+		<DeviceTemplateFileName Name="demo\demo.NbDt">
+			<OptionFlags>0x0</OptionFlags>
+		</DeviceTemplateFileName>
 	</DeviceTemplateFileNames>
 	<HardwareTemplateFileNames>
 	</HardwareTemplateFileNames>
