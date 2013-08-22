@@ -192,7 +192,7 @@ when (reset) {
 }
 
 when (timer_expires(tim)) {
-	static unsigned char i = 0;
+	static unsigned short i = 0;
 	io_out_request(iosci, &i, 1);
 	i++;
 }
