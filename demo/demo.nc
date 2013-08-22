@@ -170,6 +170,7 @@
 #endif  //_HAS_INP_DEV_NV
 
 #include <io_types.h>
+IO_8 sci baud(SCI_9600) __parity(even) iosci;
 IO_2 output bit beeper;
 stimer repeating tim;
 
@@ -191,9 +192,9 @@ when (reset) {
 }
 
 when (timer_expires(tim)) {
-	static boolean state = FALSE;
-	io_out(beeper, state);
-	state = !state;
+	static unsigned char i = 0;
+	io_out_request(iosci, &i, 1);
+	i++;
 }
 
 //
