@@ -174,6 +174,7 @@ IO_8 sci baud(SCI_9600) __parity(even) iosci;
 IO_2 output bit beeper;
 stimer repeating tim;
 
+unsigned short buff[1];
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -189,14 +190,17 @@ when (reset) {
     executeOnEachFblock(0, FBC_WHEN_RESET);
     
     tim = 1;
+    buff[0] = 0x34;
 }
 
 when (timer_expires(tim)) {
-	static unsigned short i = 0;
-	io_out_request(iosci, &i, 1);
-	i++;
+	io_out_request(iosci, buff, 1);
 }
 
+when (io_in_ready(iosci)) {
+	sci_in_request_ex(buff, 1);
+//	io_in_request(iosci, buff, 1);
+}
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
