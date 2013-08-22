@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NBProject>
+	<Contents MajorVersion="0" MinorVersion="0" CreationDate="1377137375" Format="1" Content="1">
+		<FileDescription>NodeBuilder Project File</FileDescription>
+		<UpgradeStatus>0</UpgradeStatus>
+	</Contents>
+	<IncludeSearchPath></IncludeSearchPath>
+	<DefaultTransceiver>7</DefaultTransceiver>
+	<DeviceTemplateFileNames>
+	</DeviceTemplateFileNames>
+	<HardwareTemplateFileNames>
+	</HardwareTemplateFileNames>
+</NBProject>

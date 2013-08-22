@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NBProjectOptions LoadAfterBuild="TRUE" LoadOnlyNBDevices="TRUE" StopOnWarning="FALSE" StopOnError="TRUE">
+	<Contents MajorVersion="0" MinorVersion="0" CreationDate="1377137375" Format="1" Content="1">
+		<FileDescription>NodeBuilder Project Options File</FileDescription>
+		<UpgradeStatus>0</UpgradeStatus>
+	</Contents>
+	<BuildType>0x3</BuildType>
+	<NBNetworks>
+	</NBNetworks>
+</NBProjectOptions>
