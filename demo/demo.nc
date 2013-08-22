@@ -169,6 +169,9 @@
 }
 #endif  //_HAS_INP_DEV_NV
 
+#include <io_types.h>
+IO_2 output bit beeper;
+stimer repeating tim;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -180,10 +183,17 @@
 // time-consuming director implementations may require additional caution
 // in this regard.
 //
-when (reset)
-{
+when (reset) {
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);
+    
+    tim = 1;
+}
+
+when (timer_expires(tim)) {
+	static boolean state = FALSE;
+	io_out(beeper, state);
+	state = !state;
 }
 
 //
