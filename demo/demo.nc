@@ -170,6 +170,9 @@
 #endif  //_HAS_INP_DEV_NV
 
 #include <io_types.h>
+
+#pragma specify_io_speed "10 MHz"
+
 IO_8 sci baud(SCI_9600) __parity(even) iosci;
 IO_2 output bit beeper;
 stimer repeating tim;
@@ -189,8 +192,10 @@ when (reset) {
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);
     
-    tim = 1;
-    buff[0] = 0x34;
+    tim = 0;
+    buff[0] = 0x34; 
+   	
+	sci_in_request_ex(buff, 1);
 }
 
 when (timer_expires(tim)) {
@@ -198,9 +203,11 @@ when (timer_expires(tim)) {
 }
 
 when (io_in_ready(iosci)) {
+	io_out_request(iosci, buff, 1);
+
 	sci_in_request_ex(buff, 1);
-//	io_in_request(iosci, buff, 1);
 }
+
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
