@@ -177,7 +177,7 @@ IO_8 sci baud(SCI_9600) __parity(even) iosci;
 IO_2 output bit beeper;
 stimer repeating tim;
 
-unsigned short buff[1];
+unsigned short buff[2];
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -195,17 +195,13 @@ when (reset) {
     tim = 0;
     buff[0] = 0x34; 
    	
-	sci_in_request_ex(buff, 1);
+	sci_in_request_ex(buff, 2);
 }
 
-when (timer_expires(tim)) {
-	io_out_request(iosci, buff, 1);
-}
+when (io_in_ready(iosci) == 2) {
+	io_out_request(iosci, buff, 2);
 
-when (io_in_ready(iosci)) {
-	io_out_request(iosci, buff, 1);
-
-	sci_in_request_ex(buff, 1);
+	sci_in_request_ex(buff, 2);
 }
 
 //
