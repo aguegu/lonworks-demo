@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x550E</BootID>
+				<BootID>0x1C0B</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x2907</BootID>
+				<BootID>0x7003</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
