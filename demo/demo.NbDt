@@ -6,15 +6,15 @@
 	</Contents>
 	<SourceFileName>demo.nc</SourceFileName>
 	<Description></Description>
-	<ProgramID>9000004600040400</ProgramID>
+	<ProgramID>9000004600040403</ProgramID>
 	<OutputFolder>.\</OutputFolder>
-	<LNSDeviceTemplateName>demo</LNSDeviceTemplateName>
+	<LNSDeviceTemplateName>demo [03]</LNSDeviceTemplateName>
 	<IncludeSearchPath>$LonWorks$\NodeBuilder\CodeWizard\Include</IncludeSearchPath>
 	<MinModelNumber>0x00</MinModelNumber>
 	<MaxModelNumber>0x07</MaxModelNumber>
 	<TargetDevices>
 		<TargetDevice Name="Development" HostBased="FALSE">
-			<PreviousLNSTemplateName>demo</PreviousLNSTemplateName>
+			<PreviousLNSTemplateName>demo [03]</PreviousLNSTemplateName>
 			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
 			<Compiler DisableOptimizer="TRUE" RelaxedCasting="FALSE">
 				<Defines>_DEBUG</Defines>
@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x756D</BootID>
+				<BootID>0x550E</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -46,7 +46,7 @@
 			</TargetConfiguration>
 		</TargetDevice>
 		<TargetDevice Name="Release" HostBased="FALSE">
-			<PreviousLNSTemplateName>demo</PreviousLNSTemplateName>
+			<PreviousLNSTemplateName>demo [03]</PreviousLNSTemplateName>
 			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
 			<Compiler DisableOptimizer="FALSE" RelaxedCasting="FALSE">
 				<Defines></Defines>
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x1F69</BootID>
+				<BootID>0x2907</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -102,7 +102,7 @@
 	</SourceFileList>
 	<Interface>
 		<Dependencies>
-			<BIF>0xD3C9</BIF>
+			<BIF>0x700B</BIF>
 			<BF2>0x0</BF2>
 			<XF2>0x0</XF2>
 			<XF3>0x0</XF3>

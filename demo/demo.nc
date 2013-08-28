@@ -177,7 +177,20 @@ IO_8 sci baud(SCI_9600) __parity(even) iosci;
 IO_2 output bit beeper;
 stimer repeating tim;
 
-unsigned short buff[2];
+network output SNVT_count rx_len;
+
+#define uint8_t unsigned short
+#define uint16_t unsigned long
+
+struct ring_buff {
+	uint8_t buff[256];
+	uint8_t index_in;
+	uint8_t index_out;
+};
+
+far struct ring_buff buff_rx;
+uint8_t usart_dr;
+
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -193,15 +206,42 @@ when (reset) {
     executeOnEachFblock(0, FBC_WHEN_RESET);
     
     tim = 0;
-    buff[0] = 0x34; 
-   	
-	sci_in_request_ex(buff, 2);
+    
+    buff_rx.index_in = 0;
+    buff_rx.index_out = 0;    
+       	
+	io_in_request(iosci, &usart_dr, 1);
 }
 
-when (io_in_ready(iosci) == 2) {
-	io_out_request(iosci, buff, 2);
+when (io_in_ready(iosci)) {
+	uint8_t i;
+	i = (buff_rx.index_in + 1) % 256;
+	if (i != buff_rx.index_out) {
+		buff_rx.buff[buff_rx.index_in] = usart_dr;
+		buff_rx.index_in = i;
+	}
+	sci_in_request_ex(&usart_dr, 1);	
+}
 
-	sci_in_request_ex(buff, 2);
+uint8_t usart_available() {
+	return (buff_rx.index_in + 256 - buff_rx.index_out) % 256;
+}
+
+uint8_t usart_read() {
+	if (buff_rx.index_in != buff_rx.index_out) {
+		uint8_t c;
+		c = buff_rx.buff[buff_rx.index_out];
+		buff_rx.index_out = (buff_rx.index_out + 1) % 256;
+		return c;
+	}
+	return -1;	
+}
+
+when (io_out_ready(iosci)) {
+	if (usart_available()) {
+		usart_dr = usart_read();
+		io_out_request(iosci, &usart_dr, 1);
+	}
 }
 
 //
