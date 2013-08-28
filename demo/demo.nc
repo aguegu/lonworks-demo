@@ -262,11 +262,6 @@ void usart_flush() {
 	}
 }
 
-when (io_out_ready(iosci)) {
-	if (usart_available()) {
-	}
-}
-
 when (timer_expires(tim)) {
 	if (usart_available() >= 10)
 	usart_flush();
