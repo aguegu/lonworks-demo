@@ -169,7 +169,6 @@
 }
 #endif  //_HAS_INP_DEV_NV
 
-#include <io_types.h>
 #include "macros.h"
 #include "usart.h"
 
