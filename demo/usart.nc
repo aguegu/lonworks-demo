@@ -2,8 +2,9 @@
 far struct ring_buff buff_rx;
 far struct ring_buff buff_tx;
 
-static uint8_t usart_dr;
-uint8_t dummy;
+static far uint8_t usart_dr[2][16];
+uint8_t length;
+static uint8_t flag;
 
 void usart_init(void) {
     buff_rx.index_in = 0;
@@ -11,18 +12,32 @@ void usart_init(void) {
     buff_tx.index_in = 0;
     buff_tx.index_out = 0;
 
-   	dummy = io_in_request(iosci, &usart_dr, 1);
+	flag = 0;
+   	(void)io_in_request(iosci, usart_dr[1], 16);
+}
+
+void usart_rxbuffin(uint8_t *p, uint8_t len) {
+	uint8_t i;
+	while (len--) {
+		i = (buff_rx.index_in + 1) % BUFF_SIZE;
+		if (i != buff_rx.index_out) {	
+			buff_rx.buff[buff_rx.index_in] = *p++;
+			buff_rx.index_in = i;	
+		}
+	}
 }
 
 when (io_in_ready(iosci)) {
-	uint8_t i;
-	i = (buff_rx.index_in + 1) % BUFF_SIZE;
-	if (i != buff_rx.index_out) {
-		buff_rx.buff[buff_rx.index_in] = usart_dr;
-		buff_rx.index_in = i;
-	}
-	
-	dummy = sci_in_request_ex(&usart_dr, 1);	
+//	uint8_t i;
+//	i = (buff_rx.index_in + 1) % BUFF_SIZE;
+//	if (i != buff_rx.index_out) {
+//		buff_rx.buff[buff_rx.index_in] = usart_dr[flag];
+//		buff_rx.index_in = i;
+//	}
+
+	length = sci_in_request_ex(usart_dr[flag], 128);	
+	flag ^= 0x01;	
+	usart_rxbuffin(usart_dr[flag], length);	
 }
 
 uint8_t usart_available(void) {
@@ -39,6 +54,8 @@ int16_t usart_read(void) {
 	return -1;	
 }
 
+
+
 void usart_write(uint8_t data) {
 	uint8_t i;
 	i = (buff_tx.index_in + 1) % BUFF_SIZE;
@@ -48,9 +65,10 @@ void usart_write(uint8_t data) {
 	buff_tx.index_in = i;
 }
 
-void usart_flush(void) {
+void usart_flush(void) {	
+	uint8_t c;
 	while (usart_available()) {
-		usart_dr = (uint8_t)usart_read();
-		io_out_request(iosci, &usart_dr, 1);		
+		c = (uint8_t)usart_read();
+		io_out_request(iosci, &c, 1);		
 	}
 }
