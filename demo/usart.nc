@@ -16,7 +16,7 @@ void usart_init(void) {
 
 when (io_in_ready(iosci)) {
 	uint8_t i;
-	i = (buff_rx.index_in + 1) % 256;
+	i = (buff_rx.index_in + 1) % BUFF_SIZE;
 	if (i != buff_rx.index_out) {
 		buff_rx.buff[buff_rx.index_in] = usart_dr;
 		buff_rx.index_in = i;
@@ -26,14 +26,14 @@ when (io_in_ready(iosci)) {
 }
 
 uint8_t usart_available(void) {
-	return  (uint8_t)((buff_rx.index_in + 256 - buff_rx.index_out) % 256);
+	return  (uint8_t)((BUFF_SIZE - buff_rx.index_out + buff_rx.index_in) % BUFF_SIZE);
 }
 
 int16_t usart_read(void) {
 	if (buff_rx.index_in != buff_rx.index_out) {
 		uint8_t c;
 		c = buff_rx.buff[buff_rx.index_out];
-		buff_rx.index_out = (buff_rx.index_out + 1) % 256;
+		buff_rx.index_out = (buff_rx.index_out + 1) % BUFF_SIZE;
 		return c;
 	}
 	return -1;	
@@ -41,7 +41,7 @@ int16_t usart_read(void) {
 
 void usart_write(uint8_t data) {
 	uint8_t i;
-	i = (buff_tx.index_in + 1) % 256;
+	i = (buff_tx.index_in + 1) % BUFF_SIZE;
 	while (i == buff_tx.index_out);
 	
 	buff_tx.buff[buff_tx.index_in] = data;
