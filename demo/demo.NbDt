@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x7019</BootID>
+				<BootID>0x42DA</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x1A15</BootID>
+				<BootID>0xF24</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -98,6 +98,15 @@
 		</SourceFileName>
 		<SourceFileName Name="Filesys.h">
 			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="usart.nc">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="usart.h">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="macros.h">
+			<OptionFlags>0x4</OptionFlags>
 		</SourceFileName>
 	</SourceFileList>
 	<Interface>

@@ -4,7 +4,7 @@
 		<FileDescription>NodeBuilder Project Options File</FileDescription>
 		<UpgradeStatus>0</UpgradeStatus>
 	</Contents>
-	<BuildType>0x3</BuildType>
+	<BuildType>0x1</BuildType>
 	<NBNetworks>
 		<NBNetwork Name="test_serial">
 			<DeviceItems>
