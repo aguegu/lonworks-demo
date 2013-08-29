@@ -182,7 +182,6 @@ stimer repeating tim;
 //#endif
 
 network output SNVT_count rx_len;
-far uint8_t s[4];
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -202,46 +201,36 @@ when (reset) {
     tim = 1; 
     
     usart_init();
-	for (i = 0; i < 4; i++) {
-		s[i] = i;
-	}
 }
 
-//far uint8_t frame[256];
+far uint8_t frame[256];
 
 when (usart_available()) {
-	uint8_t c;
-	
-	usart_writeBytes(s, 4);	
-	c = (uint8_t) usart_read();
-	usart_write(c);
-	usart_flush();
-	
-	memcpy(s, s+1, 3);
-/*
-	uint8_t *p, cs_calc, cs_recv, len;
-	p = frame;
+	uint8_t *p, cs_calc, cs_recv, i;
+	p = frame;	
 	p[4] = (uint8_t)usart_read();
-	if (p[0] == 0x10 || p[1] == 0x16) {
+	if (p[0] == 0x10 && p[4] == 0x16) {
 		cs_calc = p[1] + p[2];
 		cs_recv = p[3];
-	} else if (p[0] == 0x68 && p[3] == p[0] && p[1] == p[2]) {
-		len = usart_readBytes(p + 5, p[1] + 1);	
-		if (len != p[1] + 1) {
-			memset(p, 5, len);
-			return;
-		}
+	} else if (p[0] == 0x68 && 
+				p[3] == p[0] && 
+				p[1] == p[2] && 
+				usart_readBytes(p + 5, p[1] + 1) == p[1] + 1 && 
+				p[p[1] + 5] == 0x16) {
 				
-		for (p+=4, cs_calc = 0, len++; len--;) 
-			cs_calc += *p++;				
-		cs_recv = p[len];			
-	} else {
-		p[0] = p[1];
-		p[1] = p[2];
-		p[2] = p[3];
-		p[3] = p[4];
+		for (cs_calc = 0, i = 0; i < p[1]; i++) 
+			cs_calc += *(p + 4 + i);				
+			
+		cs_recv = p[p[1]+4];	
+	}	
+
+	memcpy(p, p + 1, 4);	
+
+	if (cs_calc == cs_recv) {
+		usart_write(cs_calc);		
+		usart_write(cs_recv);		
+		usart_flush();
 	}
-*/
 }
 
 //
