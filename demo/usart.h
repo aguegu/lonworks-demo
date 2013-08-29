@@ -7,7 +7,7 @@
 
 IO_8 sci baud(SCI_9600) __parity(even) iosci;
 
-#define BUFF_SIZE 256
+#define BUFF_SIZE 128
 
 struct ring_buff {
 	uint8_t buff[BUFF_SIZE];

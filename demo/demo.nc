@@ -176,12 +176,16 @@
 IO_2 output bit beeper;
 stimer repeating tim;
 
+far uint8_t cache_rx[256];
+far uint8_t frame[256];
+uint8_t package_received;
+
 //#ifdef TICK_INTERVAL 
 //#undef TICK_INTERVAL 
 //#define TICK_INTERVAL 2
 //#endif
 
-network output SNVT_count rx_len;
+network input SNVT_count nviAddressRs485 = 1;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -194,45 +198,53 @@ network output SNVT_count rx_len;
 // in this regard.
 //
 when (reset) {
-	uint8_t i;
-
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);   
     tim = 1; 
     
     usart_init();
+    package_received = 0;
 }
-
-far uint8_t frame[256];
 
 when (usart_available()) {
-	uint8_t *p, cs_calc, cs_recv, i;
-	p = frame;	
-	p[4] = (uint8_t)usart_read();
-	if (p[0] == 0x10 && p[4] == 0x16) {
-		cs_calc = p[1] + p[2];
-		cs_recv = p[3];
-	} else if (p[0] == 0x68 && 
-				p[3] == p[0] && 
-				p[1] == p[2] && 
-				usart_readBytes(p + 5, p[1] + 1) == p[1] + 1 && 
-				p[p[1] + 5] == 0x16) {
+	uint8_t cs_calc, cs_recv, i, len, address_recv;
+	len = 0;
+
+	cache_rx[4] = (uint8_t)usart_read();
+	if (cache_rx[0] == 0x10 && cache_rx[4] == 0x16) {
+		cs_calc = cache_rx[1] + cache_rx[2];
+		cs_recv = cache_rx[3];
+		address_recv = cache_rx[2];
+		len = 5;
+	} else if (cache_rx[0] == 0x68 && 
+				cache_rx[3] == cache_rx[0] && 
+				cache_rx[1] == cache_rx[2] && 
+				usart_readBytes(cache_rx + 5, cache_rx[1] + 1) == cache_rx[1] + 1 && 
+				cache_rx[cache_rx[1] + 5] == 0x16) {
 				
-		for (cs_calc = 0, i = 0; i < p[1]; i++) 
-			cs_calc += *(p + 4 + i);				
-			
-		cs_recv = p[p[1]+4];	
+		for (cs_calc = 0, i = 0; i < cache_rx[1]; i++) 
+			cs_calc += *(cache_rx + 4 + i);								
+		cs_recv = cache_rx[cache_rx[1]+4];	
+		address_recv = cache_rx[5];
+		len = cache_rx[1]+6;
 	}	
-
-	memcpy(p, p + 1, 4);	
-
-	if (cs_calc == cs_recv) {
-		usart_write(cs_calc);		
-		usart_write(cs_recv);		
-		usart_flush();
+	
+	if (cs_calc == cs_recv && 
+			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
+		memcpy(frame, cache_rx, len);
+		package_received = len;
 	}
+	
+	memcpy(cache_rx, cache_rx + 1, 4);	
 }
 
+when (package_received) {
+	uint8_t len;
+	len = package_received;
+	package_received = 0;
+	usart_writeBytes(frame, len);
+	usart_flush();	
+}
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
