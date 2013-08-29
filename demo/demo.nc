@@ -210,7 +210,7 @@ when (reset) {
 //far uint8_t frame[256];
 
 when (usart_available()) {
-	uint8_t c, i;
+	uint8_t c;
 	
 	usart_writeBytes(s, 4);	
 	c = (uint8_t) usart_read();

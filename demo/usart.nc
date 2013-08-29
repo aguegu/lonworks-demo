@@ -29,7 +29,7 @@ void usart_rxbuffin(uint8_t *p, uint8_t length) {
 void usart_txbuffout(uint8_t *p, uint8_t length) {
 	while (length--) {
 		*p++ = (uint8_t)_buff_tx.buff[_buff_tx.index_out];
-		_buff_tx.index_out = (_buff_tx.index_out + 1) % BUFF_SIZE;
+		_buff_tx.index_out = (uint8_t)((_buff_tx.index_out + 1) % BUFF_SIZE);
 		if (_buff_tx.index_out == _buff_tx.index_in) 
 			break;
 	}
