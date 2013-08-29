@@ -19,6 +19,7 @@ void usart_init(void);
 int16_t usart_read(void);
 void usart_flush(void);
 uint8_t usart_available(void);
+uint8_t usart_readBytes(uint8_t * buff, uint8_t length);
 
 #include "usart.nc"
 

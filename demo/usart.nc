@@ -26,6 +26,15 @@ void usart_rxbuffin(uint8_t *p, uint8_t length) {
 	}
 }
 
+void usart_txbuffout(uint8_t *p, uint8_t length) {
+	while (length--) {
+		*p++ = (uint8_t)_buff_tx.buff[_buff_tx.index_out];
+		_buff_tx.index_out = (_buff_tx.index_out + 1) % BUFF_SIZE;
+		if (_buff_tx.index_out == _buff_tx.index_in) 
+			break;
+	}
+}
+
 when (io_in_ready(iosci)) {
 	_length = sci_in_request_ex(_usart_dr[_flag], 16);	
 	_flag ^= 0x01;	
@@ -36,6 +45,10 @@ uint8_t usart_available(void) {
 	return  (uint8_t)((BUFF_SIZE - _buff_rx.index_out + _buff_rx.index_in) % BUFF_SIZE);
 }
 
+uint8_t usart_cached(void) {
+	return  (uint8_t)((BUFF_SIZE - _buff_tx.index_out + _buff_tx.index_in) % BUFF_SIZE);
+}
+
 int16_t usart_read(void) {
 	if (_buff_rx.index_in != _buff_rx.index_out) {
 		uint8_t c;
@@ -44,6 +57,40 @@ int16_t usart_read(void) {
 		return c;
 	}
 	return -1;	
+}
+
+int16_t usart_readTimed(void) {
+	uint16_t start, t;
+	int16_t c;
+	start = get_tick_count();
+	t = 6;
+	
+	while (t) {
+		c = usart_read();
+		if (c >= 0 ) return c;
+		if (get_tick_count() - start) {
+			t--;
+			start++;
+		}
+	}
+	
+	return -1;
+}
+
+uint8_t usart_readBytes(uint8_t * buff, uint8_t length) {
+	uint8_t index;
+	int16_t c; 
+	
+	index = 0;
+	
+	while(index < length) {
+		c = usart_readTimed();
+		if (c == -1) break;
+		*buff++ = (uint8_t)c;
+		index++;
+	}
+	
+	return index;
 }
 
 void usart_write(uint8_t data) {
@@ -57,8 +104,8 @@ void usart_write(uint8_t data) {
 
 void usart_flush(void) {	
 	uint8_t c;
-	while (usart_available()) {
-		c = (uint8_t)usart_read();
+	while (usart_cached()) {
+		usart_txbuffout(&c, 1);
 		io_out_request(iosci, &c, 1);		
 	}
 }

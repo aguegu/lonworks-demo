@@ -182,6 +182,7 @@ stimer repeating tim;
 //#endif
 
 network output SNVT_count rx_len;
+far uint8_t s[4];
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -194,23 +195,56 @@ network output SNVT_count rx_len;
 // in this regard.
 //
 when (reset) {
-	uint8_t c;
-	c = 0;
+	uint8_t i;
+
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);   
     tim = 1; 
     
     usart_init();
+	for (i = 0; i < 4; i++) {
+		s[i] = i;
+	}
 }
 
-when (timer_expires(tim)) {
-	uint16_t start, end;	
-	if (usart_available()) {	
-		start = get_tick_count();
-		usart_flush();
-		end = get_tick_count();	
-		rx_len = end - start;
+//far uint8_t frame[256];
+
+when (usart_available()) {
+	uint8_t c, i;
+	
+	for (i = 0; i < 4; i++) {
+		usart_write(s[i]);
 	}
+	
+	c = (uint8_t) usart_read();
+	usart_write(c);
+	usart_flush();
+	
+	memcpy(s, s+1, 3);
+/*
+	uint8_t *p, cs_calc, cs_recv, len;
+	p = frame;
+	p[4] = (uint8_t)usart_read();
+	if (p[0] == 0x10 || p[1] == 0x16) {
+		cs_calc = p[1] + p[2];
+		cs_recv = p[3];
+	} else if (p[0] == 0x68 && p[3] == p[0] && p[1] == p[2]) {
+		len = usart_readBytes(p + 5, p[1] + 1);	
+		if (len != p[1] + 1) {
+			memset(p, 5, len);
+			return;
+		}
+				
+		for (p+=4, cs_calc = 0, len++; len--;) 
+			cs_calc += *p++;				
+		cs_recv = p[len];			
+	} else {
+		p[0] = p[1];
+		p[1] = p[2];
+		p[2] = p[3];
+		p[3] = p[4];
+	}
+*/
 }
 
 //
