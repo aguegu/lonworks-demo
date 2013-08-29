@@ -171,9 +171,15 @@
 
 #include "macros.h"
 #include "usart.h"
+#include "system.nc"
 
 IO_2 output bit beeper;
 stimer repeating tim;
+
+//#ifdef TICK_INTERVAL 
+//#undef TICK_INTERVAL 
+//#define TICK_INTERVAL 2
+//#endif
 
 network output SNVT_count rx_len;
 
@@ -188,17 +194,23 @@ network output SNVT_count rx_len;
 // in this regard.
 //
 when (reset) {
+	uint8_t c;
+	c = 0;
     initAllFblockData(TOTAL_FBLOCK_COUNT);
-    executeOnEachFblock(0, FBC_WHEN_RESET);
-    
+    executeOnEachFblock(0, FBC_WHEN_RESET);   
     tim = 1; 
     
-    usart_init();    	
+    usart_init();
 }
 
 when (timer_expires(tim)) {
-	if (usart_available() >= 10)
+	uint16_t start, end;	
+	if (usart_available()) {	
+		start = get_tick_count();
 		usart_flush();
+		end = get_tick_count();	
+		rx_len = end - start;
+	}
 }
 
 //

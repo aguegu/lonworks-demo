@@ -1,4 +1,3 @@
-
 far struct ring_buff _buff_rx;
 far struct ring_buff _buff_tx;
 
@@ -46,8 +45,6 @@ int16_t usart_read(void) {
 	}
 	return -1;	
 }
-
-
 
 void usart_write(uint8_t data) {
 	uint8_t i;

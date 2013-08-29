@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x5A64</BootID>
+				<BootID>0x548C</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x5A64</BootID>
+				<BootID>0x7E89</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -106,6 +106,9 @@
 			<OptionFlags>0x4</OptionFlags>
 		</SourceFileName>
 		<SourceFileName Name="macros.h">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="system.nc">
 			<OptionFlags>0x4</OptionFlags>
 		</SourceFileName>
 	</SourceFileList>
