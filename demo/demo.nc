@@ -212,10 +212,7 @@ when (reset) {
 when (usart_available()) {
 	uint8_t c, i;
 	
-	for (i = 0; i < 4; i++) {
-		usart_write(s[i]);
-	}
-	
+	usart_writeBytes(s, 4);	
 	c = (uint8_t) usart_read();
 	usart_write(c);
 	usart_flush();

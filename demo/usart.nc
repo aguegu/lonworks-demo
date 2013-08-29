@@ -96,10 +96,15 @@ uint8_t usart_readBytes(uint8_t * buff, uint8_t length) {
 void usart_write(uint8_t data) {
 	uint8_t i;
 	i = (uint8_t)((_buff_tx.index_in + 1) % BUFF_SIZE);
-	while (i == _buff_tx.index_out);
-	
-	_buff_tx.buff[_buff_tx.index_in] = data;
-	_buff_tx.index_in = i;
+	if (i != _buff_tx.index_out) {
+		_buff_tx.buff[_buff_tx.index_in] = data;
+		_buff_tx.index_in = i;
+	}
+}
+
+void usart_writeBytes(uint8_t *buff, uint8_t length) {
+	while (length--) 
+		usart_write(*buff++);
 }
 
 void usart_flush(void) {	
