@@ -172,12 +172,13 @@
 #include "macros.h"
 #include "usart.h"
 #include "system.nc"
+#include "iec103.h"
 
 IO_2 output bit beeper;
 stimer repeating tim;
 
 far uint8_t cache_rx[256];
-far uint8_t frame[256];
+far record frame;
 uint8_t package_received;
 
 //#ifdef TICK_INTERVAL 
@@ -231,18 +232,17 @@ when (usart_available()) {
 	
 	if (cs_calc == cs_recv && 
 			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
-		memcpy(frame, cache_rx, len);
-		package_received = len;
+		memcpy(frame.buff, cache_rx, len);
+		frame.length = len;
+		package_received = 1;
 	}
 	
 	memcpy(cache_rx, cache_rx + 1, 4);	
 }
 
 when (package_received) {
-	uint8_t len;
-	len = package_received;
 	package_received = 0;
-	usart_writeBytes(frame, len);
+	usart_writeBytes(frame.buff, frame.length);
 	usart_flush();	
 }
 //

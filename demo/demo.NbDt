@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x25D3</BootID>
+				<BootID>0x71F7</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x79CC</BootID>
+				<BootID>0x45F0</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -109,6 +109,9 @@
 			<OptionFlags>0x4</OptionFlags>
 		</SourceFileName>
 		<SourceFileName Name="system.nc">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="iec103.h">
 			<OptionFlags>0x4</OptionFlags>
 		</SourceFileName>
 	</SourceFileList>
