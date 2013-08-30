@@ -178,7 +178,10 @@ IO_2 output bit beeper;
 stimer repeating tim;
 
 far uint8_t cache_rx[256];
+
 far Package package_rx;
+far Package package_tx;
+
 uint8_t package_received;
 
 //#ifdef TICK_INTERVAL 
@@ -268,15 +271,48 @@ when (package_received) {
     processRxPackage();
 }
 
+int8_t on68Request() { 
+    int8_t result;   
+    AsduHead *ah;
+    ah = (AsduHead *) package_rx.frame68.asdu_buff;
+
+    switch (ah->typ) {
+    case 0X07 :
+    case 0X0A :
+    case 0X15 :
+    case 0x40 :
+        result = 1; //repHasData();
+        break;  
+    default:
+        result = -1;
+        break;
+    }
+    
+    return result;
+}
+
 int8_t processRxPackage() {
     int8_t result;
-    result = *package_rx.control & 0x0f;
+    uint8_t func;
     
-	usart_write(*package_rx.control);
-	usart_write(*package_rx.address);
-	usart_flush();
-	
-	return result;
+    func = *package_rx.control & 0x0f;
+    
+    switch (func) {
+    case 3:
+        result = on68Request();
+        break;
+    default:
+        result = -1;
+        break;
+    }    
+
+	// usart_write(*package_rx.control);
+	// usart_write(*package_rx.address);
+	usart_write(result);
+
+    usart_flush();
+    
+    return result;
 }
 
 

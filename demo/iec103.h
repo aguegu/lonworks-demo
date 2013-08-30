@@ -37,3 +37,12 @@ typedef struct {
 	Frame68 frame68;	
 	Frame10 *frame10;
 } Package;
+
+typedef  struct {
+	uint8_t typ;
+	uint8_t vsq;
+	uint8_t cot;
+	uint8_t pid;
+	uint8_t fun;
+	uint8_t inf;
+} AsduHead;
