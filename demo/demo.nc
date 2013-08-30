@@ -190,6 +190,7 @@ uint8_t package_received;
 //#endif
 
 network input SNVT_count nviAddressRs485 = 1;
+network output SNVT_switch nvoCoverStatus;
 int8_t processRxPackage(void);
 
 //
@@ -205,7 +206,8 @@ int8_t processRxPackage(void);
 when (reset) {
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);   
-    tim = 1; 
+
+    nvoCoverStatus.state = FALSE;   
     
     usart_init();
     package_received = 0;
@@ -268,7 +270,21 @@ when (package_received) {
     } else 
         return;
         
-    processRxPackage();
+    processRxPackage();    
+}
+
+int8_t replyHasData() {
+    Frame10 * p10;
+    
+    p10 = (Frame10 *) package_tx.record.buff;    
+    *p10 = REP_NULL;    
+    
+    p10->address = nviAddressRs485;
+    p10->control = 0X28;
+    p10->crc = p10->control + p10->address;
+    
+    package_tx.record.length = 5;
+    return 5;
 }
 
 int8_t on68Request() { 
@@ -281,7 +297,7 @@ int8_t on68Request() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        result = 1; //repHasData();
+        result = replyHasData();
         break;  
     default:
         result = -1;
@@ -289,6 +305,34 @@ int8_t on68Request() {
     }
     
     return result;
+}
+
+void refresh() {
+   uint8_t func;
+    AsduHead *ah;
+
+    func = *package_rx.control & 0x0f;
+
+    switch(func) {
+        case 3:
+            break;
+        default:
+            return;
+    }
+    
+    ah = (AsduHead *) package_rx.frame68.asdu_buff;    
+    switch (ah->typ) {
+        case 0x40:
+            switch (ah->inf) {
+                case 0x70:  // open             
+                    nvoCoverStatus.state = 1;
+                    break;
+                case 0x71:  // close
+                    nvoCoverStatus.state = 0;
+                    break;
+            }
+            break;
+    }
 }
 
 int8_t processRxPackage() {
@@ -306,12 +350,13 @@ int8_t processRxPackage() {
         break;
     }    
 
-	// usart_write(*package_rx.control);
-	// usart_write(*package_rx.address);
-	usart_write(result);
-
+    // usart_write(*package_rx.control);
+    // usart_write(*package_rx.address);
+    usart_writeBytes(package_tx.record.buff, package_tx.record.length);
     usart_flush();
     
+    refresh();
+
     return result;
 }
 

@@ -1,3 +1,6 @@
+#ifndef IEC_103_H_
+#define IEC_103_H_
+
 #include "macros.h"
 
 typedef struct {
@@ -46,3 +49,8 @@ typedef  struct {
 	uint8_t fun;
 	uint8_t inf;
 } AsduHead;
+
+
+Frame10 REP_NULL = { 0X10, 0X09, 0X00, 0X00, 0X16 };
+
+#endif
