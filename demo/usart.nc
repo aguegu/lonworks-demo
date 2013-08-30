@@ -1,5 +1,5 @@
-far struct ring_buff _buff_rx;
-far struct ring_buff _buff_tx;
+far struct RingBuff _buff_rx;
+far struct RingBuff _buff_tx;
 
 static far uint8_t _usart_dr[2][16];
 static uint8_t _length;
@@ -104,6 +104,11 @@ void usart_write(uint8_t data) {
 
 void usart_writeBytes(uint8_t *buff, uint8_t length) {
 	while (length--) 
+		usart_write(*buff++);
+}
+
+void usart_writeString(const char *buff) {
+	while (*buff) 
 		usart_write(*buff++);
 }
 

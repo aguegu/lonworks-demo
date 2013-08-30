@@ -178,7 +178,7 @@ IO_2 output bit beeper;
 stimer repeating tim;
 
 far uint8_t cache_rx[256];
-far record frame;
+far Package package_rx;
 uint8_t package_received;
 
 //#ifdef TICK_INTERVAL 
@@ -187,6 +187,7 @@ uint8_t package_received;
 //#endif
 
 network input SNVT_count nviAddressRs485 = 1;
+int8_t processRxPackage(void);
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -232,8 +233,8 @@ when (usart_available()) {
 	
 	if (cs_calc == cs_recv && 
 			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
-		memcpy(frame.buff, cache_rx, len);
-		frame.length = len;
+		memcpy(package_rx.record.buff, cache_rx, len);
+		package_rx.record.length = len;
 		package_received = 1;
 	}
 	
@@ -241,10 +242,44 @@ when (usart_available()) {
 }
 
 when (package_received) {
+    uint8_t * p;
 	package_received = 0;
-	usart_writeBytes(frame.buff, frame.length);
-	usart_flush();	
+    p = package_rx.record.buff;
+
+    if (*package_rx.record.buff == 0x68) {       
+        
+        package_rx.control = p + 4;
+        package_rx.address = p + 5;
+
+        package_rx.frame68.header68 = (Header68 *)p;        
+        package_rx.frame68.asdu_buff = p + 6;
+        package_rx.frame68.asdu_length = package_rx.record.length - 8;
+        package_rx.frame68.crc = p + package_rx.record.length - 2;
+        package_rx.frame68.end = p + package_rx.record.length - 1;
+
+        package_rx.address = package_rx.record.buff + 5;
+    } else if (*package_rx.record.buff == 0x10) {
+        package_rx.control = p + 1;
+        package_rx.address = p + 2;
+        package_rx.frame10 = (Frame10 *) package_rx.record.buff;
+    } else 
+        return;
+        
+    processRxPackage();
 }
+
+int8_t processRxPackage() {
+    int8_t result;
+    result = *package_rx.control & 0x0f;
+    
+	usart_write(*package_rx.control);
+	usart_write(*package_rx.address);
+	usart_flush();
+	
+	return result;
+}
+
+
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
