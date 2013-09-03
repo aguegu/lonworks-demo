@@ -193,6 +193,8 @@ uint8_t package_received;
 
 network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverStatus;
+network output SNVT_time_stamp nvoLastTiming;
+
 int8_t processRxPackage(void);
 
 //
@@ -288,7 +290,7 @@ when (package_received) {
     processRxPackage();
 }
 
-int8_t reply10Frame(uint8_t control) {
+int8_t replyFrame10(uint8_t control) {
     Frame10 * p10;
 
     p10 = (Frame10 *) package_tx.record.buff;
@@ -302,7 +304,7 @@ int8_t reply10Frame(uint8_t control) {
     return 5;
 }
 
-int8_t on68Request() {
+int8_t onRequest6803() {
     int8_t result;
     AsduHead *ah;
     ah = (AsduHead *) package_rx.frame68.asdu_buff;
@@ -312,7 +314,7 @@ int8_t on68Request() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        result = reply10Frame(0x28);
+        result = replyFrame10(0x28);
         break;
     default:
         result = -1;
@@ -320,6 +322,18 @@ int8_t on68Request() {
     }
 
     return result;
+}
+
+int8_t onRequest6804() {
+    uint8_t * p;
+    p = package_rx.frame68.asdu_buff + 6;
+    nvoLastTiming.second = (p[0] + (p[1] << 8)) / 1000;
+    nvoLastTiming.minute = p[2] & 0x3f;
+    nvoLastTiming.hour = p[3] & 0x1f;
+    nvoLastTiming.day = p[4] & 0x1f;
+    nvoLastTiming.month = p[5] & 0x0f;
+    nvoLastTiming.year = (p[6] & 0x7f) + 0x780;
+    return 0;
 }
 
 uint8_t replyRankQuery(uint8_t rank) {
@@ -360,6 +374,12 @@ void refresh() {
                 break;
             }
             break;
+        case 0x0b:
+            if (datumlist.datums[2].length == 0) {
+                // prepareAlarm();
+                // prepareRealData();
+            }
+            break;
     }
 }
 
@@ -371,7 +391,10 @@ int8_t processRxPackage() {
 
     switch (func) {
     case 0x03:
-        result = on68Request();
+        result = onRequest6803();
+        break;
+    case 0x04:
+        result = onRequest6804();
         break;
     case 0x0a:
         if (datumlist.datums[0].length)
@@ -379,7 +402,15 @@ int8_t processRxPackage() {
         else if (datumlist.datums[1].length)
             replyRankQuery(0x01);
         else
-            reply10Frame(0x09);
+            replyFrame10(0x09);
+        break;
+    case 0x0b:
+        if (datumlist.datums[0].length)
+            replyRankQuery(0x00);
+        else if (datumlist.datums[2].length)
+            replyRankQuery(0x02);
+        else
+            replyFrame10(0x09);
         break;
     default:
         result = -1;
