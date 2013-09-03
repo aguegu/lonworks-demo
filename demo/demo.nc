@@ -218,9 +218,9 @@ when (reset) {
 
     memset((char*)&datumlist, 0, sizeof(datumlist));
 
-    datumlist.datums[0].capacity = RECORD_CLASS_1_CAPACITY;
-    datumlist.datums[1].capacity = RECORD_CLASS_2_CAPACITY;
-    datumlist.datums[2].capacity = RECORD_CLASS_3_CAPACITY;
+    datumlist.datums[0].capacity = RECORD_RANK_1_CAPACITY;
+    datumlist.datums[1].capacity = RECORD_RANK_2_CAPACITY;
+    datumlist.datums[2].capacity = RECORD_RANK_3_CAPACITY;
 
     for (i = 0, k = 0; i < 3 ; i++) {
         for (j = 0; j < datumlist.datums[i].capacity; j++)
@@ -288,14 +288,14 @@ when (package_received) {
     processRxPackage();
 }
 
-int8_t replyHasData() {
+int8_t reply10Frame(uint8_t control) {
     Frame10 * p10;
 
     p10 = (Frame10 *) package_tx.record.buff;
     *p10 = REP_NULL;
 
     p10->address = nviAddressRs485;
-    p10->control = 0X28;
+    p10->control = control;
     p10->crc = p10->control + p10->address;
 
     package_tx.record.length = 5;
@@ -312,7 +312,7 @@ int8_t on68Request() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        result = replyHasData();
+        result = reply10Frame(0x28);
         break;
     default:
         result = -1;
@@ -320,6 +320,22 @@ int8_t on68Request() {
     }
 
     return result;
+}
+
+uint8_t replyRankQuery(uint8_t rank) {
+    Datum * current_datum;
+    Record * current_record;
+    current_datum = &datumlist.datums[rank % 3];
+    current_record = current_datum->records[current_datum->start];
+    current_datum->start = (current_datum->start + 1) % current_datum->capacity;
+
+    if (current_datum->length)
+        current_datum->length --;
+
+    package_tx.record.length = current_record->length;
+    memcpy(package_tx.record.buff, current_record->buff,  current_record->length);
+
+    return current_record->length;
 }
 
 void refresh() {
@@ -330,25 +346,20 @@ void refresh() {
 
     switch(func) {
         case 0x03:
-        ah = (AsduHead *) package_rx.frame68.asdu_buff;
-        switch (ah->typ) {
-        case 0x40:
-            switch (ah->inf) {
-            case 0x70:  // open
-                nvoCoverStatus.state = 1;
-                break;
-            case 0x71:  // close
-                nvoCoverStatus.state = 0;
+            ah = (AsduHead *) package_rx.frame68.asdu_buff;
+            switch (ah->typ) {
+            case 0x40:
+                switch (ah->inf) {
+                case 0x70:  // open
+                    nvoCoverStatus.state = 1;
+                    break;
+                case 0x71:  // close
+                    nvoCoverStatus.state = 0;
+                    break;
+                }
                 break;
             }
             break;
-        }
-        break;
-    case 0x0a:
-
-        break;
-    default:
-        return;
     }
 }
 
@@ -359,8 +370,16 @@ int8_t processRxPackage() {
     func = *package_rx.control & 0x0f;
 
     switch (func) {
-    case 3:
+    case 0x03:
         result = on68Request();
+        break;
+    case 0x0a:
+        if (datumlist.datums[0].length)
+            replyRankQuery(0x00);
+        else if (datumlist.datums[1].length)
+            replyRankQuery(0x01);
+        else
+            reply10Frame(0x09);
         break;
     default:
         result = -1;

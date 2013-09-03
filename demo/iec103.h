@@ -58,13 +58,13 @@ typedef struct {
 	Record *records[5];
 } Datum;
 
-#define RECORD_CLASS_1_CAPACITY 5
-#define RECORD_CLASS_2_CAPACITY 1
-#define RECORD_CLASS_3_CAPACITY 1
+#define RECORD_RANK_1_CAPACITY 5
+#define RECORD_RANK_2_CAPACITY 1
+#define RECORD_RANK_3_CAPACITY 1
 
 typedef struct {
 	Datum datums[3];
-	Record records[RECORD_CLASS_1_CAPACITY + RECORD_CLASS_2_CAPACITY + RECORD_CLASS_3_CAPACITY];
+	Record records[RECORD_RANK_1_CAPACITY + RECORD_RANK_2_CAPACITY + RECORD_RANK_3_CAPACITY];
 } DatumList;
 
 Frame10 REP_NULL = { 0X10, 0X09, 0X00, 0X00, 0X16 };
