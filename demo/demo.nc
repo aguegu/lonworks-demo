@@ -171,7 +171,6 @@
 
 #include "macros.h"
 #include "usart.h"
-#include "system.nc"
 #include "iec103.h"
 
 IO_2 output bit beeper;
