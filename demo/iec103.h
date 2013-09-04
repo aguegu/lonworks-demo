@@ -4,9 +4,11 @@
 #include "macros.h"
 #include <float.h>
 
+#define BUFF_SIZE (32)
+
 typedef struct {
 	uint8_t length;
-	uint8_t buff[32];
+	uint8_t buff[BUFF_SIZE];
 } Record;
 
 typedef struct {

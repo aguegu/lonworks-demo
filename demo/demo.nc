@@ -422,6 +422,9 @@ int8_t processRxPackage() {
     usart_writeBytes(package_tx.record.buff, package_tx.record.length);
     usart_flush();
 
+    package_tx.record.length = 0;
+    memset(package_tx.record.buff, 0, BUFF_SIZE);
+
     refresh();
 
     return result;
