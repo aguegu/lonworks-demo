@@ -170,22 +170,10 @@
 #endif  //_HAS_INP_DEV_NV
 
 #include "macros.h"
-#include "usart.h"
-#include "iec103.h"
+#include "usart.nc"
 
 IO_2 output bit beeper;
 stimer repeating tim;
-
-far uint8_t cache_rx[256];
-
-far Record frame;
-
-uint8_t package_received;
-
-//#ifdef TICK_INTERVAL
-//#undef TICK_INTERVAL
-//#define TICK_INTERVAL 2
-//#endif
 
 network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverStatus;
@@ -213,38 +201,6 @@ when (reset) {
 
     usart_init();
     package_received = 0;
-}
-
-when (usart_available()) {
-	uint8_t cs_calc, cs_recv, i, len, address_recv;
-	len = 0;
-
-	cache_rx[4] = (uint8_t)usart_read();
-	if (cache_rx[0] == 0x10 && cache_rx[4] == 0x16) {
-		cs_calc = cache_rx[1] + cache_rx[2];
-		cs_recv = cache_rx[3];
-		address_recv = cache_rx[2];
-		len = 5;
-	} else if (cache_rx[0] == 0x68 &&
-				cache_rx[3] == cache_rx[0] &&
-				cache_rx[1] == cache_rx[2] &&
-				usart_readBytes(cache_rx + 5, cache_rx[1] + 1) == cache_rx[1] + 1 &&
-				cache_rx[cache_rx[1] + 5] == 0x16) {
-
-		for (cs_calc = 0, i = 0; i < cache_rx[1]; i++)
-			cs_calc += *(cache_rx + 4 + i);
-		cs_recv = cache_rx[cache_rx[1]+4];
-		address_recv = cache_rx[5];
-		len = cache_rx[1]+6;
-	}
-
-	if (cs_calc == cs_recv) {
-		memcpy(frame.buff, cache_rx, len);
-		frame.length = len;
-		package_received = 1;
-	}
-
-	memcpy(cache_rx, cache_rx + 1, 4);
 }
 
 when (package_received) {

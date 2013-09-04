@@ -1,3 +1,27 @@
+#ifndef USART_NC
+#define USART_NC
+
+#include <io_types.h>
+#include "macros.h"
+
+#pragma specify_io_clock "10 MHz"
+
+IO_8 sci baud(SCI_9600) __parity(even) iosci;
+
+#define BUFF_SIZE 128
+
+struct RingBuff{
+	uint8_t buff[BUFF_SIZE];
+	uint8_t index_in;
+	uint8_t index_out;
+};
+
+typedef struct {
+	uint8_t length;
+	uint8_t buff[64];
+} Record;
+
+
 far struct RingBuff _buff_rx;
 far struct RingBuff _buff_tx;
 
@@ -5,9 +29,13 @@ static far uint8_t _usart_dr[2][16];
 static uint8_t _length;
 static uint8_t _flag;
 
+far uint8_t cache_rx[256];
+far Record frame;
+uint8_t package_received;
+
 void usart_init(void) {
     _buff_rx.index_in = 0;
-    _buff_rx.index_out = 0;        
+    _buff_rx.index_out = 0;
     _buff_tx.index_in = 0;
     _buff_tx.index_out = 0;
 
@@ -19,9 +47,9 @@ void usart_rxbuffin(uint8_t *p, uint8_t length) {
 	uint8_t i;
 	while (length--) {
 		i = (uint8_t)((_buff_rx.index_in + 1) % BUFF_SIZE);
-		if (i != _buff_rx.index_out) {	
+		if (i != _buff_rx.index_out) {
 			_buff_rx.buff[_buff_rx.index_in] = *p++;
-			_buff_rx.index_in = i;	
+			_buff_rx.index_in = i;
 		}
 	}
 }
@@ -30,15 +58,15 @@ void usart_txbuffout(uint8_t *p, uint8_t length) {
 	while (length--) {
 		*p++ = (uint8_t)_buff_tx.buff[_buff_tx.index_out];
 		_buff_tx.index_out = (uint8_t)((_buff_tx.index_out + 1) % BUFF_SIZE);
-		if (_buff_tx.index_out == _buff_tx.index_in) 
+		if (_buff_tx.index_out == _buff_tx.index_in)
 			break;
 	}
 }
 
 when (io_in_ready(iosci)) {
-	_length = sci_in_request_ex(_usart_dr[_flag], 16);	
-	_flag ^= 0x01;	
-	usart_rxbuffin(_usart_dr[_flag], _length);	
+	_length = sci_in_request_ex(_usart_dr[_flag], 16);
+	_flag ^= 0x01;
+	usart_rxbuffin(_usart_dr[_flag], _length);
 }
 
 uint8_t usart_available(void) {
@@ -56,7 +84,7 @@ int16_t usart_read(void) {
 		_buff_rx.index_out = (uint8_t)((_buff_rx.index_out + 1) % BUFF_SIZE);
 		return c;
 	}
-	return -1;	
+	return -1;
 }
 
 int16_t usart_readTimed(void) {
@@ -64,7 +92,7 @@ int16_t usart_readTimed(void) {
 	int16_t c;
 	start = get_tick_count();
 	t = 6;
-	
+
 	while (t) {
 		c = usart_read();
 		if (c >= 0 ) return c;
@@ -73,23 +101,23 @@ int16_t usart_readTimed(void) {
 			start++;
 		}
 	}
-	
+
 	return -1;
 }
 
 uint8_t usart_readBytes(uint8_t * buff, uint8_t length) {
 	uint8_t index;
-	int16_t c; 
-	
+	int16_t c;
+
 	index = 0;
-	
+
 	while(index < length) {
 		c = usart_readTimed();
 		if (c == -1) break;
 		*buff++ = (uint8_t)c;
 		index++;
 	}
-	
+
 	return index;
 }
 
@@ -103,19 +131,53 @@ void usart_write(uint8_t data) {
 }
 
 void usart_writeBytes(uint8_t *buff, uint8_t length) {
-	while (length--) 
+	while (length--)
 		usart_write(*buff++);
 }
 
 void usart_writeString(const char *buff) {
-	while (*buff) 
+	while (*buff)
 		usart_write(*buff++);
 }
 
-void usart_flush(void) {	
+void usart_flush(void) {
 	uint8_t c;
 	while (usart_cached()) {
 		usart_txbuffout(&c, 1);
-		io_out_request(iosci, &c, 1);		
+		io_out_request(iosci, &c, 1);
 	}
 }
+
+when (usart_available()) {
+	uint8_t cs_calc, cs_recv, i, len, address_recv;
+	len = 0;
+
+	cache_rx[4] = (uint8_t)usart_read();
+	if (cache_rx[0] == 0x10 && cache_rx[4] == 0x16) {
+		cs_calc = cache_rx[1] + cache_rx[2];
+		cs_recv = cache_rx[3];
+		address_recv = cache_rx[2];
+		len = 5;
+	} else if (cache_rx[0] == 0x68 &&
+				cache_rx[3] == cache_rx[0] &&
+				cache_rx[1] == cache_rx[2] &&
+				usart_readBytes(cache_rx + 5, cache_rx[1] + 1) == cache_rx[1] + 1 &&
+				cache_rx[cache_rx[1] + 5] == 0x16) {
+
+		for (cs_calc = 0, i = 0; i < cache_rx[1]; i++)
+			cs_calc += *(cache_rx + 4 + i);
+		cs_recv = cache_rx[cache_rx[1]+4];
+		address_recv = cache_rx[5];
+		len = cache_rx[1]+6;
+	}
+
+	if (cs_calc == cs_recv) {
+		memcpy(frame.buff, cache_rx, len);
+		frame.length = len;
+		package_received = 1;
+	}
+
+	memcpy(cache_rx, cache_rx + 1, 4);
+}
+
+#endif
