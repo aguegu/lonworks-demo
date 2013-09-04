@@ -177,7 +177,8 @@ stimer repeating tim;
 
 network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverStatus;
-network output SNVT_time_stamp nvoLastTiming;
+network output SNVT_count nvoBuffTxLength;
+network output SNVT_char_ascii nvoBuffTx[64];
 
 int8_t processRxPackage(void);
 
@@ -192,8 +193,6 @@ int8_t processRxPackage(void);
 // in this regard.
 //
 when (reset) {
-    uint8_t i, j, k;
-
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);
 
@@ -201,10 +200,18 @@ when (reset) {
 
     usart_init();
     package_received = 0;
+    nvoBuffTxLength = 0;
 }
 
 when (package_received) {
+    uint8_t i;
 	package_received = 0;
+
+    for (i = 0; i < frame.length; i++)
+        nvoBuffTx[i] = frame.buff[i];
+
+    nvoBuffTxLength = frame.length;
+
     usart_writeBytes(frame.buff, frame.length);
     usart_flush();
 }
