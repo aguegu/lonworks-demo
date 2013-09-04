@@ -178,10 +178,7 @@ stimer repeating tim;
 
 far uint8_t cache_rx[256];
 
-far Package package_rx;
-far Package package_tx;
-
-far DatumList datumlist;
+far Record frame;
 
 uint8_t package_received;
 
@@ -216,17 +213,6 @@ when (reset) {
 
     usart_init();
     package_received = 0;
-
-    memset((char*)&datumlist, 0, sizeof(datumlist));
-
-    datumlist.datums[0].capacity = RECORD_RANK_1_CAPACITY;
-    datumlist.datums[1].capacity = RECORD_RANK_2_CAPACITY;
-    datumlist.datums[2].capacity = RECORD_RANK_3_CAPACITY;
-
-    for (i = 0, k = 0; i < 3 ; i++) {
-        for (j = 0; j < datumlist.datums[i].capacity; j++)
-            datumlist.datums[i].records[j] = &(datumlist.records[k++]);
-    }
 }
 
 when (usart_available()) {
@@ -252,10 +238,9 @@ when (usart_available()) {
 		len = cache_rx[1]+6;
 	}
 
-	if (cs_calc == cs_recv &&
-			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
-		memcpy(package_rx.record.buff, cache_rx, len);
-		package_rx.record.length = len;
+	if (cs_calc == cs_recv) {
+		memcpy(frame.buff, cache_rx, len);
+		frame.length = len;
 		package_received = 1;
 	}
 
@@ -263,172 +248,10 @@ when (usart_available()) {
 }
 
 when (package_received) {
-    uint8_t * p;
 	package_received = 0;
-    p = package_rx.record.buff;
-
-    if (*package_rx.record.buff == 0x68) {
-
-        package_rx.control = p + 4;
-        package_rx.address = p + 5;
-
-        package_rx.frame68.header68 = (Header68 *)p;
-        package_rx.frame68.asdu_buff = p + 6;
-        package_rx.frame68.asdu_length = package_rx.record.length - 8;
-        package_rx.frame68.crc = p + package_rx.record.length - 2;
-        package_rx.frame68.end = p + package_rx.record.length - 1;
-
-        package_rx.address = package_rx.record.buff + 5;
-    } else if (*package_rx.record.buff == 0x10) {
-        package_rx.control = p + 1;
-        package_rx.address = p + 2;
-        package_rx.frame10 = (Frame10 *) package_rx.record.buff;
-    } else
-        return;
-
-    processRxPackage();
-}
-
-int8_t replyFrame10(uint8_t control) {
-    Frame10 * p10;
-
-    p10 = (Frame10 *) package_tx.record.buff;
-    *p10 = REP_NULL;
-
-    p10->address = nviAddressRs485;
-    p10->control = control;
-    p10->crc = p10->control + p10->address;
-
-    package_tx.record.length = 5;
-    return 5;
-}
-
-int8_t onRequest6803() {
-    int8_t result;
-    AsduHead *ah;
-    ah = (AsduHead *) package_rx.frame68.asdu_buff;
-
-    switch (ah->typ) {
-    case 0X07 :
-    case 0X0A :
-    case 0X15 :
-    case 0x40 :
-        result = replyFrame10(0x28);
-        break;
-    default:
-        result = -1;
-        break;
-    }
-
-    return result;
-}
-
-int8_t onRequest6804() {
-    uint8_t * p;
-    p = package_rx.frame68.asdu_buff + 6;
-    nvoLastTiming.second = (p[0] + (p[1] << 8)) / 1000;
-    nvoLastTiming.minute = p[2] & 0x3f;
-    nvoLastTiming.hour = p[3] & 0x1f;
-    nvoLastTiming.day = p[4] & 0x1f;
-    nvoLastTiming.month = p[5] & 0x0f;
-    nvoLastTiming.year = (p[6] & 0x7f) + 0x780;
-    return 0;
-}
-
-uint8_t replyRankQuery(uint8_t rank) {
-    Datum * current_datum;
-    Record * current_record;
-    current_datum = &datumlist.datums[rank % 3];
-    current_record = current_datum->records[current_datum->start];
-    current_datum->start = (current_datum->start + 1) % current_datum->capacity;
-
-    if (current_datum->length)
-        current_datum->length --;
-
-    package_tx.record.length = current_record->length;
-    memcpy(package_tx.record.buff, current_record->buff,  current_record->length);
-
-    return current_record->length;
-}
-
-void refresh() {
-    uint8_t func;
-    AsduHead *ah;
-
-    func = *package_rx.control & 0x0f;
-
-    switch(func) {
-        case 0x03:
-            ah = (AsduHead *) package_rx.frame68.asdu_buff;
-            switch (ah->typ) {
-            case 0x40:
-                switch (ah->inf) {
-                case 0x70:  // open
-                    nvoCoverStatus.state = 1;
-                    break;
-                case 0x71:  // close
-                    nvoCoverStatus.state = 0;
-                    break;
-                }
-                break;
-            }
-            break;
-        case 0x0b:
-            if (datumlist.datums[2].length == 0) {
-                // prepareAlarm();
-                // prepareRealData();
-            }
-            break;
-    }
-}
-
-int8_t processRxPackage() {
-    int8_t result;
-    uint8_t func;
-
-    func = *package_rx.control & 0x0f;
-
-    switch (func) {
-    case 0x03:
-        result = onRequest6803();
-        break;
-    case 0x04:
-        result = onRequest6804();
-        break;
-    case 0x0a:
-        if (datumlist.datums[0].length)
-            replyRankQuery(0x00);
-        else if (datumlist.datums[1].length)
-            replyRankQuery(0x01);
-        else
-            replyFrame10(0x09);
-        break;
-    case 0x0b:
-        if (datumlist.datums[0].length)
-            replyRankQuery(0x00);
-        else if (datumlist.datums[2].length)
-            replyRankQuery(0x02);
-        else
-            replyFrame10(0x09);
-        break;
-    default:
-        result = -1;
-        break;
-    }
-
-    // usart_write(*package_rx.control);
-    // usart_write(*package_rx.address);
-    usart_writeBytes(package_tx.record.buff, package_tx.record.length);
+    usart_writeBytes(frame.buff, frame.length);
     usart_flush();
-
-    package_tx.record.length = 0;
-    memset(package_tx.record.buff, 0, BUFF_SIZE);
-
-    refresh();
-
-    return result;
 }
-
 
 //
 // when(offline) executes as the device enters the offline state.
