@@ -10,6 +10,10 @@ class SimplesticTest(unittest.TestCase):
 		self.sp.baudrate = 9600 
 		self.sp.parity = serial.PARITY_EVEN
 		self.sp.timeout = 0.050
+		self.sp.open()
+
+	def tearDown(self):
+		self.sp.close()
 
 	def transmit(self, s):
 		self.sp.write(bytearray.fromhex(s))
@@ -21,16 +25,12 @@ class SimplesticTest(unittest.TestCase):
 #		print '< ' + s
 		return s
 
-	def testOpen(self):
-		self.sp.open()
+	def testPortOpen(self):
 		self.assertTrue(self.sp.isOpen())
-		self.sp.close()
 
 	def command(self, outstr, instr):
-		self.sp.open()
 		self.transmit(outstr)
 		s = self.receive(32)
-		self.sp.close()
 		self.assertTrue(s == instr)
 
 	def testOpenCover(self):
@@ -38,6 +38,9 @@ class SimplesticTest(unittest.TestCase):
 
 	def testCloseCover(self):
 		self.command("68 0a 0a 68 53 01 40 01 0c 01 12 71 00 00 25 16", "10 28 01 29 16");
-	
+
+	def testTiming(self):
+		self.command("68 0F 0F 68 44 01 06 81 08 FF FF 00 40 9C 00 12 07 08 5D 2C 16", "");
+
 if __name__ == '__main__':
 	unittest.main()
