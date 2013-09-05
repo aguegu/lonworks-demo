@@ -296,7 +296,7 @@ int8_t replyFrame10(uint8_t control) {
     p10 = (Frame10 *) package_tx.record.buff;
     *p10 = REP_NULL;
 
-    p10->address = nviAddressRs485;
+    p10->address = (uint8_t)nviAddressRs485;
     p10->control = control;
     p10->crc = p10->control + p10->address;
 
@@ -327,7 +327,7 @@ int8_t onRequest6803() {
 int8_t onRequest6804() {
     uint8_t * p;
     p = package_rx.frame68.asdu_buff + 6;
-    nvoLastTiming.second = (p[0] + (p[1] << 8)) / 1000;
+    nvoLastTiming.second = (uint8_t)((p[0] + (p[1] << 8)) / 1000);
     nvoLastTiming.minute = p[2] & 0x3f;
     nvoLastTiming.hour = p[3] & 0x1f;
     nvoLastTiming.day = p[4] & 0x1f;
