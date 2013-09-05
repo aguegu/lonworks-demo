@@ -30,7 +30,7 @@ static uint8_t _length;
 static uint8_t _flag;
 
 far uint8_t cache_rx[256];
-far Record frame;
+far Record frame_rx;
 uint8_t package_received;
 
 void usart_init(void) {
@@ -172,8 +172,8 @@ when (usart_available()) {
 	}
 
 	if (cs_calc == cs_recv) {
-		memcpy(frame.buff, cache_rx, len);
-		frame.length = len;
+		memcpy(frame_rx.buff, cache_rx, len);
+		frame_rx.length = len;
 		package_received = 1;
 	}
 
