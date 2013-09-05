@@ -176,11 +176,11 @@ network output SNVT_switch nvoTxFlag;
 network output SNVT_count nvoBuffTxLength;
 network output SNVT_char_ascii nvoBuffTx[64];
 
-// network input SNVT_switch nviRxFlag;
-// network input SNVT_count nviBuffRxLength;
-// network input SNVT_char_ascii nviBuffRx[64];
+network input SNVT_switch nviRxFlag;
+network input SNVT_count nviBuffRxLength;
+network input SNVT_char_ascii nviBuffRx[64];
 
-// far Record frame_tx;
+far Record frame_tx;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -214,16 +214,16 @@ when (package_received) {
     nvoTxFlag.state = !nvoTxFlag.state;
 }
 
-// when (nv_update_occurs(nviRxFlag)) {
-// 	uint8_t i;
-// 	frame_tx.length = nviBuffRxLength;
+when (nv_update_occurs(nviRxFlag)) {
+	uint8_t i;
+	frame_tx.length = (uint8_t)nviBuffRxLength;
 
-//     for (i = 0; i < frame_tx.length; i++)
-//         frame_tx.buff[i] = nviBuffRx[i];
+    for (i = 0; i < frame_tx.length; i++)
+        frame_tx.buff[i] = nviBuffRx[i];
 
-//     usart_writeBytes(frame_tx.buff, frame_tx.length);
-//     usart_flush();
-// }
+    usart_writeBytes(frame_tx.buff, frame_tx.length);
+    usart_flush();
+}
 
 //
 // when(offline) executes as the device enters the offline state.
