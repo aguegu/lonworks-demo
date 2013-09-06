@@ -1,3 +1,20 @@
+#ifndef USART_NC
+#define USART_NC
+
+#include <io_types.h>
+
+#pragma specify_io_clock "10 MHz"
+
+IO_8 sci baud(SCI_9600) __parity(even) iosci;
+
+#define BUFF_SIZE 128
+
+struct RingBuff{
+	uint8_t buff[BUFF_SIZE];
+	uint8_t index_in;
+	uint8_t index_out;
+};
+
 far struct RingBuff _buff_rx;
 far struct RingBuff _buff_tx;
 
@@ -119,3 +136,5 @@ void usart_flush(void) {
 		io_out_request(iosci, &c, 1);		
 	}
 }
+
+#endif

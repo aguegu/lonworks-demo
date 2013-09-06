@@ -170,8 +170,7 @@
 #endif  //_HAS_INP_DEV_NV
 
 #include "macros.h"
-#include "usart.h"
-#include "system.nc"
+#include "usart.nc"
 #include "iec103.h"
 
 IO_2 output bit beeper;
@@ -185,11 +184,6 @@ far Package package_tx;
 far DatumList datumlist;
 
 uint8_t package_received;
-
-//#ifdef TICK_INTERVAL
-//#undef TICK_INTERVAL
-//#define TICK_INTERVAL 2
-//#endif
 
 network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverStatus;
