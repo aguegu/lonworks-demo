@@ -19,6 +19,7 @@ far struct RingBuff _buff_rx;
 far struct RingBuff _buff_tx;
 
 static far uint8_t _usart_dr[2][16];
+
 static uint8_t _length;
 static uint8_t _flag;
 

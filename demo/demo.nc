@@ -172,22 +172,27 @@
 #include "macros.h"
 #include "usart.nc"
 #include "iec103.h"
+#include <float.h>
 
-IO_2 output bit beeper;
-stimer repeating tim;
+//IO_2 output bit beeper;
+//stimer repeating tim;
 
 far uint8_t cache_rx[256];
 
 far Package package_rx;
 far Package package_tx;
 
-far DatumList datumlist;
-
 uint8_t package_received;
 
-network input SNVT_count nviAddressRs485 = 1;
-network output SNVT_switch nvoCoverStatus;
 network output SNVT_time_stamp nvoLastTiming;
+
+network input SNVT_count nviAddressRs485 = 1;
+network input SNVT_switch nviCoverStatus;
+network input SNVT_switch nvoCoverControl;
+network input SNVT_angle_f nviAngle;
+network input SNVT_press_f nviHit;
+network input SNVT_switch nviLocked;
+network input SNVT_date_time nviUpdateOn;
 
 int8_t processRxPackage(void);
 
@@ -202,26 +207,13 @@ int8_t processRxPackage(void);
 // in this regard.
 //
 when (reset) {
-    uint8_t i, j, k;
-
-    initAllFblockData(TOTAL_FBLOCK_COUNT);
+   initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);
 
-    nvoCoverStatus.state = FALSE;
+    nvoCoverControl.state = FALSE;
 
     usart_init();
     package_received = 0;
-
-    memset((char*)&datumlist, 0, sizeof(datumlist));
-
-    datumlist.datums[0].capacity = RECORD_RANK_1_CAPACITY;
-    datumlist.datums[1].capacity = RECORD_RANK_2_CAPACITY;
-    datumlist.datums[2].capacity = RECORD_RANK_3_CAPACITY;
-
-    for (i = 0, k = 0; i < 3 ; i++) {
-        for (j = 0; j < datumlist.datums[i].capacity; j++)
-            datumlist.datums[i].records[j] = &(datumlist.records[k++]);
-    }
 }
 
 when (usart_available()) {
@@ -269,7 +261,7 @@ when (package_received) {
 
         package_rx.frame68.header68 = (Header68 *)p;
         package_rx.frame68.asdu_buff = p + 6;
-        package_rx.frame68.asdu_length = package_rx.record.length - 8;
+        package_rx.frame68.asdu_length = *(p + 1);
         package_rx.frame68.crc = p + package_rx.record.length - 2;
         package_rx.frame68.end = p + package_rx.record.length - 1;
 
@@ -282,6 +274,21 @@ when (package_received) {
         return;
 
     processRxPackage();
+}
+
+when (nv_update_occurs(nviUpdateOn)) {
+
+}
+
+int8_t replyFrame68() {
+    Header68 * p68;
+    p68 = (Header68 *) package_tx.record.buff;   
+    p68->start = 0x68;
+    p68->length = 0x1a;
+    p68->length_confirm = 0x1a;
+    p68->start_confirm = 0x68;
+    package_tx.record.length = 4;
+    return 4;
 }
 
 int8_t replyFrame10(uint8_t control) {
@@ -330,22 +337,6 @@ int8_t onRequest6804() {
     return 0;
 }
 
-uint8_t replyRankQuery(uint8_t rank) {
-    Datum * current_datum;
-    Record * current_record;
-    current_datum = &datumlist.datums[rank % 3];
-    current_record = current_datum->records[current_datum->start];
-    current_datum->start = (current_datum->start + 1) % current_datum->capacity;
-
-    if (current_datum->length)
-        current_datum->length --;
-
-    package_tx.record.length = current_record->length;
-    memcpy(package_tx.record.buff, current_record->buff,  current_record->length);
-
-    return current_record->length;
-}
-
 void refresh() {
     uint8_t func;
     AsduHead *ah;
@@ -359,21 +350,15 @@ void refresh() {
             case 0x40:
                 switch (ah->inf) {
                 case 0x70:  // open
-                    nvoCoverStatus.state = 1;
+                    nvoCoverControl.state = 1;
                     break;
                 case 0x71:  // close
-                    nvoCoverStatus.state = 0;
+                    nvoCoverControl.state = 0;
                     break;
                 }
                 break;
             }
-            break;
-        case 0x0b:
-            if (datumlist.datums[2].length == 0) {
-                // prepareAlarm();
-                // prepareRealData();
-            }
-            break;
+            break;      
     }
 }
 
@@ -389,23 +374,9 @@ int8_t processRxPackage() {
         break;
     case 0x04:
         result = onRequest6804();
-        break;
-    case 0x0a:
-        if (datumlist.datums[0].length)
-            replyRankQuery(0x00);
-        else if (datumlist.datums[1].length)
-            replyRankQuery(0x01);
-        else
-            replyFrame10(0x09);
-        break;
+        break;    
     case 0x0b:
-        if (datumlist.datums[0].length)
-            replyRankQuery(0x00);
-        else if (datumlist.datums[2].length)
-            replyRankQuery(0x02);
-        else
-            replyFrame10(0x09);
-        break;
+        result = replyFrame68();
     default:
         result = -1;
         break;
