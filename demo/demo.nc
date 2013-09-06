@@ -179,8 +179,8 @@
 
 far uint8_t cache_rx[256];
 
-far Package package_rx;
-far Package package_tx;
+far Record package_rx;
+far Record package_tx;
 
 uint8_t package_received;
 
@@ -241,8 +241,7 @@ when (usart_available()) {
 
 	if (cs_calc == cs_recv &&
 			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
-		memcpy(package_rx.record.buff, cache_rx, len);
-		package_rx.record.length = len;
+        init(&package_rx, cache_rx, len);
 		package_received = 1;
 	}
 
@@ -250,29 +249,11 @@ when (usart_available()) {
 }
 
 when (package_received) {
-    uint8_t * p;
+    //uint8_t * p;
 	package_received = 0;
-    p = package_rx.record.buff;
+    //p = package_rx.record.buff;
 
-    if (*package_rx.record.buff == 0x68) {
-
-        package_rx.control = p + 4;
-        package_rx.address = p + 5;
-
-        package_rx.frame68.header68 = (Header68 *)p;
-        package_rx.frame68.asdu_buff = p + 6;
-        package_rx.frame68.asdu_length = *(p + 1);
-        package_rx.frame68.crc = p + package_rx.record.length - 2;
-        package_rx.frame68.end = p + package_rx.record.length - 1;
-
-        package_rx.address = package_rx.record.buff + 5;
-    } else if (*package_rx.record.buff == 0x10) {
-        package_rx.control = p + 1;
-        package_rx.address = p + 2;
-        package_rx.frame10 = (Frame10 *) package_rx.record.buff;
-    } else
-        return;
-
+//    initPackage(&package_rx, *package_rx.record.buff);
     processRxPackage();
 }
 
@@ -281,37 +262,23 @@ when (nv_update_occurs(nviUpdateOn)) {
 }
 
 int8_t replyFrame68() {
-    Header68 * p68;
-    p68 = (Header68 *) package_tx.record.buff;   
-    p68->start = 0x68;
-    p68->length = 0x1a;
-    p68->length_confirm = 0x1a;
-    p68->start_confirm = 0x68;
-    package_tx.record.length = 4;
-    return 4;
+    uint8_t s[2];
+    s[0] = 0xde;
+    s[1] = 0xed;
+
+    fillAsFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, s, 2);
+
+    return 8 + 2;
 }
 
 int8_t replyFrame10(uint8_t control) {
-    Frame10 * p10;
-
-    p10 = (Frame10 *) package_tx.record.buff;
-
-    p10->start  = 0x10;
-    p10->control = control;
-    p10->address = (uint8_t)nviAddressRs485;    
-    p10->crc = p10->control + p10->address;
-    p10->end = 0x16;
-
-    package_tx.record.length = 5;
+    fillAsFrame10(&package_tx, control, (uint8_t)nviAddressRs485);
     return 5;
 }
 
 int8_t onRequest6803() {
     int8_t result;
-    AsduHead *ah;
-    ah = (AsduHead *) package_rx.frame68.asdu_buff;
-
-    switch (ah->typ) {
+    switch (getAsduHead(&package_rx)->typ) {
     case 0X07 :
     case 0X0A :
     case 0X15 :
@@ -328,7 +295,7 @@ int8_t onRequest6803() {
 
 int8_t onRequest6804() {
     uint8_t * p;
-    p = package_rx.frame68.asdu_buff + 6;
+    p = package_rx.buff + 6;
     nvoLastTiming.second = (uint8_t)((p[0] + (p[1] << 8)) / 1000);
     nvoLastTiming.minute = p[2] & 0x3f;
     nvoLastTiming.hour = p[3] & 0x1f;
@@ -339,17 +306,11 @@ int8_t onRequest6804() {
 }
 
 void refresh() {
-    uint8_t func;
-    AsduHead *ah;
-
-    func = *package_rx.control & 0x0f;
-
-    switch(func) {
+    switch(getFunctionCode(&package_rx)) {
         case 0x03:
-            ah = (AsduHead *) package_rx.frame68.asdu_buff;
-            switch (ah->typ) {
+            switch (getAsduHead(&package_rx)->typ) {
             case 0x40:
-                switch (ah->inf) {
+                switch (getAsduHead(&package_rx)->inf) {
                 case 0x70:  // open
                     nvoCoverControl.state = 1;
                     break;
@@ -359,23 +320,20 @@ void refresh() {
                 }
                 break;
             }
-            break;      
+            break;
     }
 }
 
 int8_t processRxPackage() {
     int8_t result;
-    uint8_t func;
 
-    func = *package_rx.control & 0x0f;
-
-    switch (func) {
+    switch (getFunctionCode(&package_rx)) {
     case 0x03:
         result = onRequest6803();
         break;
     case 0x04:
         result = onRequest6804();
-        break;    
+        break;
     case 0x0b:
         result = replyFrame68();
     default:
@@ -385,11 +343,11 @@ int8_t processRxPackage() {
 
     // usart_write(*package_rx.control);
     // usart_write(*package_rx.address);
-    usart_writeBytes(package_tx.record.buff, package_tx.record.length);
+    usart_writeBytes(package_tx.buff, package_tx.length);
     usart_flush();
 
-    package_tx.record.length = 0;
-    memset(package_tx.record.buff, 0, BUFF_SIZE);
+    package_tx.length = 0;
+    memset(package_tx.buff, 0, BUFF_SIZE);
 
     refresh();
 
