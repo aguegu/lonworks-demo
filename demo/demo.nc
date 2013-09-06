@@ -295,11 +295,12 @@ int8_t replyFrame10(uint8_t control) {
     Frame10 * p10;
 
     p10 = (Frame10 *) package_tx.record.buff;
-    *p10 = REP_NULL;
 
-    p10->address = (uint8_t)nviAddressRs485;
+    p10->start  = 0x10;
     p10->control = control;
+    p10->address = (uint8_t)nviAddressRs485;    
     p10->crc = p10->control + p10->address;
+    p10->end = 0x16;
 
     package_tx.record.length = 5;
     return 5;

@@ -51,49 +51,4 @@ typedef  struct {
 	uint8_t inf;
 } AsduHead;
 
-const Frame10 REP_NULL = { 0X10, 0X09, 0X00, 0X00, 0X16 };
-
-typedef struct {
-    uint8_t enable;
-	float_type rate;
-	float_type rateOfHit;
-} Adjustment;
-
-typedef struct {
-    uint8_t enable;
-	float_type acceleration_x[2];
-	float_type acceleration_y[2];
-	float_type acceleration_z[2];
-	float_type vertical_shock[2];
-	float_type sample_rate[2];
-} AlarmLimit;
-
-typedef struct {
-	uint16_t msec;
-	uint8_t minute:6 ;
-	uint8_t res1:2 ;
-	uint8_t hour:5;
-	uint8_t res2:3;
-	uint8_t day:5;
-	uint8_t weekday:3;
-	uint8_t month:4;
-	uint8_t res3:4;
-	uint8_t year:7;
-	uint8_t res4:1;
-} Cp56Time2a;
-
-typedef struct {
-	unsigned char fcb;
-	unsigned char address;
-	unsigned char bound;
-	Adjustment adjustment;
-	AlarmLimit limitData;
-	Cp56Time2a aClock;
-	// TEvent congjEvt;
-	// TEvent qingxEvt;
-	// TEvent openEvt;
-	unsigned char crc;
-} Node;
-
-
 #endif
