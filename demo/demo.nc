@@ -194,8 +194,11 @@ network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
 network input SNVT_date_time nviUpdateOn;
 
-int8_t processRxPackage(void);
-
+int8_t onRequest6804(void);
+int8_t onRequest6803(void);
+int8_t replyFrame68(void);
+int8_t replyFrame10(uint8_t control);
+void refresh(void);
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -249,12 +252,30 @@ when (usart_available()) {
 }
 
 when (package_received) {
-    //uint8_t * p;
-	package_received = 0;
-    //p = package_rx.record.buff;
+	int8_t result;
+    package_received = 0;
 
-//    initPackage(&package_rx, *package_rx.record.buff);
-    processRxPackage();
+    switch (getFunctionCode(&package_rx)) {
+    case 0x03:
+        result = onRequest6803();
+        break;
+    case 0x04:
+        result = onRequest6804();
+        break;
+    case 0x0b:
+        result = replyFrame68();
+    default:
+        result = -1;
+        break;
+    }
+
+    usart_writeBytes(package_tx.buff, package_tx.length);
+    usart_flush();
+
+    package_tx.length = 0;
+    memset(package_tx.buff, 0, BUFF_SIZE);
+
+    refresh();
 }
 
 when (nv_update_occurs(nviUpdateOn)) {
@@ -323,37 +344,6 @@ void refresh() {
             break;
     }
 }
-
-int8_t processRxPackage() {
-    int8_t result;
-
-    switch (getFunctionCode(&package_rx)) {
-    case 0x03:
-        result = onRequest6803();
-        break;
-    case 0x04:
-        result = onRequest6804();
-        break;
-    case 0x0b:
-        result = replyFrame68();
-    default:
-        result = -1;
-        break;
-    }
-
-    // usart_write(*package_rx.control);
-    // usart_write(*package_rx.address);
-    usart_writeBytes(package_tx.buff, package_tx.length);
-    usart_flush();
-
-    package_tx.length = 0;
-    memset(package_tx.buff, 0, BUFF_SIZE);
-
-    refresh();
-
-    return result;
-}
-
 
 //
 // when(offline) executes as the device enters the offline state.
