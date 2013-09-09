@@ -194,10 +194,10 @@ network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
 network input SNVT_date_time nviUpdateOn;
 
-int8_t onRequest6804(void);
-int8_t onRequest6803(void);
-int8_t replyFrame68(void);
-int8_t replyFrame10(uint8_t control);
+void onRequest6804(void);
+void onRequest6803(void);
+void replyFrame68(void);
+void replyFrame10(uint8_t control);
 void refresh(void);
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -252,21 +252,17 @@ when (usart_available()) {
 }
 
 when (package_received) {
-	int8_t result;
     package_received = 0;
 
     switch (getFunctionCode(&package_rx)) {
     case 0x03:
-        result = onRequest6803();
+        onRequest6803();
         break;
     case 0x04:
-        result = onRequest6804();
+        onRequest6804();
         break;
     case 0x0b:
-        result = replyFrame68();
-    default:
-        result = -1;
-        break;
+        replyFrame68();
     }
 
     usart_writeBytes(package_tx.buff, package_tx.length);
@@ -282,39 +278,30 @@ when (nv_update_occurs(nviUpdateOn)) {
 
 }
 
-int8_t replyFrame68() {
+void replyFrame68(void) {
     uint8_t s[2];
     s[0] = 0xde;
     s[1] = 0xed;
 
     fillAsFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, s, 2);
-
-    return 8 + 2;
 }
 
-int8_t replyFrame10(uint8_t control) {
+void replyFrame10(uint8_t control) {
     fillAsFrame10(&package_tx, control, (uint8_t)nviAddressRs485);
-    return 5;
 }
 
-int8_t onRequest6803() {
-    int8_t result;
+void onRequest6803() {
     switch (getAsduHead(&package_rx)->typ) {
     case 0X07 :
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        result = replyFrame10(0x28);
-        break;
-    default:
-        result = -1;
+        replyFrame10(0x28);
         break;
     }
-
-    return result;
 }
 
-int8_t onRequest6804() {
+void onRequest6804() {
     uint8_t * p;
     p = package_rx.buff + 6;
     nvoLastTiming.second = (uint8_t)((p[0] + (p[1] << 8)) / 1000);
@@ -323,7 +310,6 @@ int8_t onRequest6804() {
     nvoLastTiming.day = p[4] & 0x1f;
     nvoLastTiming.month = p[5] & 0x0f;
     nvoLastTiming.year = (p[6] & 0x7f) + 0x780;
-    return 0;
 }
 
 void refresh() {
@@ -350,8 +336,7 @@ void refresh() {
 // Make sure to keep this task short, as the state change can
 // not be confirmed until this task is completed.
 //
-when (offline)
-{
+when (offline) {
     executeOnEachFblock(0, FBC_WHEN_OFFLINE);
 }
 
@@ -360,8 +345,7 @@ when (offline)
 // Make sure to keep this task short, as the state change can
 // not be confirmed until this task is completed.
 //
-when (online)
-{
+when (online) {
     executeOnEachFblock(0, FBC_WHEN_ONLINE);
 }
 
