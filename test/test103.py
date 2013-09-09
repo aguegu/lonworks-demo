@@ -43,7 +43,7 @@ class SimplesticTest(unittest.TestCase):
 		self.command("68 0F 0F 68 44 01 06 81 08 FF FF 00 40 9C 00 12 07 08 5D 2C 16", "");
 
 	def testInquireCover(self):
-		self.command("10 5B 01 5C 16", "68 04 04 68 08 01 DE ED D4 16")
+		self.command("10 5B 01 5C 16", "68 08 08 68 08 01 32 83 00 00 0c 01 cb 16")
 
 if __name__ == '__main__':
 	unittest.main()

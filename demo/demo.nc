@@ -278,12 +278,10 @@ when (nv_update_occurs(nviUpdateOn)) {
 
 }
 
-void replyFrame68(void) {
-    uint8_t s[2];
-    s[0] = 0xde;
-    s[1] = 0xed;
+const uint8_t ASDU_HEAD_100B[6] = {0x32, 0x83, 0x00, 0x00, 0x0c, 0x01};
 
-    fillAsFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, s, 2);
+void replyFrame68(void) {
+    fillAsFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, ASDU_HEAD_100B, 6);
 }
 
 void replyFrame10(uint8_t control) {
