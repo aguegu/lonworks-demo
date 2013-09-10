@@ -250,6 +250,7 @@ when (usart_available()) {
 }
 
 const uint8_t ASDU_HEAD_100B[6] = {0x32, 0x83, 0x00, 0x00, 0x0c, 0x01};
+const uint8_t ARGUMENT_INDEX[3][2] = {{0x01, 0x08}, {0x01, 0x09}, {0x01, 0x01}};
 
 when (package_received) {
     package_received = 0;
@@ -264,6 +265,15 @@ when (package_received) {
     case 0x0b:
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
         appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
+        appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
+        appendFrame68(&package_tx, &nviAngle, 4);
+        appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
+        appendFrame68(&package_tx, &nviHit, 4);
+        appendFrame68(&package_tx, ARGUMENT_INDEX[3], 2);
+        appendByteToFrame68(&package_tx, nviLocked.state == 1? 0x04:0x00);
+        appendByteToFrame68(&package_tx, 0x00);
+        appendByteToFrame68(&package_tx, 0x00);
+        appendByteToFrame68(&package_tx, 0x00);
         completeFrame68(&package_tx);
     }
 
