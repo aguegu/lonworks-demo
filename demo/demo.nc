@@ -196,8 +196,6 @@ network input SNVT_date_time nviUpdateOn;
 
 void onRequest6804(void);
 void onRequest6803(void);
-void replyFrame68(void);
-void replyFrame10(uint8_t control);
 void refresh(void);
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -251,6 +249,8 @@ when (usart_available()) {
 	memcpy(cache_rx, cache_rx + 1, 4);
 }
 
+const uint8_t ASDU_HEAD_100B[6] = {0x32, 0x83, 0x00, 0x00, 0x0c, 0x01};
+
 when (package_received) {
     package_received = 0;
 
@@ -262,7 +262,7 @@ when (package_received) {
         onRequest6804();
         break;
     case 0x0b:
-        replyFrame68();
+        fillFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, ASDU_HEAD_100B, 6);
     }
 
     usart_writeBytes(package_tx.buff, package_tx.length);
@@ -278,23 +278,13 @@ when (nv_update_occurs(nviUpdateOn)) {
 
 }
 
-const uint8_t ASDU_HEAD_100B[6] = {0x32, 0x83, 0x00, 0x00, 0x0c, 0x01};
-
-void replyFrame68(void) {
-    fillAsFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, ASDU_HEAD_100B, 6);
-}
-
-void replyFrame10(uint8_t control) {
-    fillAsFrame10(&package_tx, control, (uint8_t)nviAddressRs485);
-}
-
 void onRequest6803() {
     switch (getAsduHead(&package_rx)->typ) {
     case 0X07 :
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        replyFrame10(0x28);
+        fillFrame10(&package_tx, 0x28, (uint8_t)nviAddressRs485);
         break;
     }
 }

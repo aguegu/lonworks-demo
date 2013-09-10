@@ -32,7 +32,7 @@ void init(Record *p, void * cache, uint8_t length) {
 	p->length = length;
 }
 
-void fillAsFrame10(Record *p, uint8_t control, uint8_t address) {
+void fillFrame10(Record *p, uint8_t control, uint8_t address) {
 	p->buff[0] = 0x10;
 	p->buff[1] = control;
 	p->buff[2] = address;
@@ -41,7 +41,7 @@ void fillAsFrame10(Record *p, uint8_t control, uint8_t address) {
 	p->length = 5;
 }
 
-void fillAsFrame68(Record *p, uint8_t control, uint8_t address, const uint8_t * asdu, uint8_t asdu_length) {
+void fillFrame68(Record *p, uint8_t control, uint8_t address, const void * asdu, uint8_t asdu_length) {
 	uint8_t i, sum;
 
 	p->buff[0] = p->buff[3] = 0x68;
