@@ -269,7 +269,7 @@ when (package_received) {
         appendFrame68(&package_tx, &nviAngle, 4);
         appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
         appendFrame68(&package_tx, &nviHit, 4);
-        appendFrame68(&package_tx, ARGUMENT_INDEX[3], 2);
+        appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
         appendByteToFrame68(&package_tx, nviLocked.state == 1? 0x04:0x00);
         appendByteToFrame68(&package_tx, 0x00);
         appendByteToFrame68(&package_tx, 0x00);

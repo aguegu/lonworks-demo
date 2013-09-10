@@ -9,15 +9,6 @@ typedef struct {
 	uint8_t length;
 } Record;
 
-typedef struct {
-	uint8_t start;
-	uint8_t length;
-	uint8_t length_confirm;
-	uint8_t start_confirm;
-	uint8_t control;
-	uint8_t address;
-} Header68;
-
 typedef  struct {
 	uint8_t typ;
 	uint8_t vsq;
