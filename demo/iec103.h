@@ -32,7 +32,7 @@ void init(Record *p, void * cache, uint8_t length) {
 	p->length = length;
 }
 
-void fillFrame10(Record *p, uint8_t control, uint8_t address) {
+void setFrame10(Record *p, uint8_t control, uint8_t address) {
 	p->buff[0] = 0x10;
 	p->buff[1] = control;
 	p->buff[2] = address;
@@ -41,22 +41,47 @@ void fillFrame10(Record *p, uint8_t control, uint8_t address) {
 	p->length = 5;
 }
 
-void fillFrame68(Record *p, uint8_t control, uint8_t address, const void * asdu, uint8_t asdu_length) {
-	uint8_t i, sum;
-
+void initFrame68(Record *p, uint8_t control, uint8_t address) {
 	p->buff[0] = p->buff[3] = 0x68;
-	p->buff[1] = p->buff[2] = asdu_length + 2;
+	p->buff[1] = p->buff[2] = 0;
 	p->buff[4] = control;
 	p->buff[5] = address;
-	memcpy(p->buff + 6, asdu, asdu_length);
+	p->length = 6;
+}
 
-	for (i=4, sum=0; i<6+asdu_length; i++)
+void appendFrame68(Record *p, const void * asdu, uint8_t asdu_length) {
+	memcpy(p->buff + p->length, asdu, asdu_length);
+	p->length += asdu_length;
+}
+
+void completeFrame68(Record *p) {
+	uint8_t i, sum;
+	for (i=4, sum=0; i < p->length; i++)
 		sum += p->buff[i];
 
-	p->buff[asdu_length + 6] = sum;
-	p->buff[asdu_length + 7] = 0x16;
-	p->length = asdu_length + 8;
+	p->buff[p->length] = sum;
+	p->buff[p->length + 1] = 0x16;
+	p->length += 2;
+
+	p->buff[1] = p->buff[2] = p->length - 6;
 }
+
+// void fillFrame68(Record *p, uint8_t control, uint8_t address, const void * asdu, uint8_t asdu_length) {
+// 	uint8_t i, sum;
+
+// 	p->buff[0] = p->buff[3] = 0x68;
+// 	p->buff[1] = p->buff[2] = asdu_length + 2;
+// 	p->buff[4] = control;
+// 	p->buff[5] = address;
+// 	memcpy(p->buff + 6, asdu, asdu_length);
+
+// 	for (i=4, sum=0; i<6+asdu_length; i++)
+// 		sum += p->buff[i];
+
+// 	p->buff[asdu_length + 6] = sum;
+// 	p->buff[asdu_length + 7] = 0x16;
+// 	p->length = asdu_length + 8;
+// }
 
 uint8_t getFunctionCode(Record *p) {
    uint8_t func;
@@ -69,6 +94,11 @@ uint8_t getFunctionCode(Record *p) {
 		func = 0;
 
 	return func;
+}
+
+void clear(Record *p) {
+    p->length = 0;
+    memset(p->buff, 0, BUFF_SIZE);
 }
 
 AsduHead * getAsduHead(Record *p) {

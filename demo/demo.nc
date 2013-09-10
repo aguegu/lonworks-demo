@@ -262,14 +262,15 @@ when (package_received) {
         onRequest6804();
         break;
     case 0x0b:
-        fillFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485, ASDU_HEAD_100B, 6);
+        initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
+        appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
+        completeFrame68(&package_tx);
     }
 
     usart_writeBytes(package_tx.buff, package_tx.length);
     usart_flush();
 
-    package_tx.length = 0;
-    memset(package_tx.buff, 0, BUFF_SIZE);
+    clear(&package_tx);
 
     refresh();
 }
@@ -284,7 +285,7 @@ void onRequest6803() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        fillFrame10(&package_tx, 0x28, (uint8_t)nviAddressRs485);
+        setFrame10(&package_tx, 0x28, (uint8_t)nviAddressRs485);
         break;
     }
 }
