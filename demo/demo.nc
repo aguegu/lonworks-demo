@@ -301,21 +301,15 @@ void onRequest6804() {
 }
 
 void refresh() {
-    switch(getFunctionCode(&package_rx)) {
-    case 0x03:
-        switch (getAsduHead(&package_rx)->typ) {
-        case 0x40:
-            switch (getAsduHead(&package_rx)->inf) {
-            case 0x70:  // open
-                nvoCoverControl.state = 1;
-                break;
-            case 0x71:  // close
-                nvoCoverControl.state = 0;
-                break;
-            }
+    if (getFunctionCode(&package_rx) == 0x03 && getAsduHead(&package_rx)->typ == 0x40) {
+        switch (getAsduHead(&package_rx)->inf) {
+        case 0x70:  // open
+            nvoCoverControl.state = 1;
+            break;
+        case 0x71:  // close
+            nvoCoverControl.state = 0;
             break;
         }
-        break;
     }
 }
 
