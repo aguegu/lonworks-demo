@@ -28,13 +28,13 @@ class SimplesticTest(unittest.TestCase):
 			self.assertTrue(m[-1] == 0x16)
 		
 			if m[0] == 0x68:
-				self.assertTrue(sum(m[4:-2]) % 256 == m[-2])
+				self.assertTrue(sum(m[4:-2]) & 0xff == m[-2])
 				self.assertTrue(m[0] == m[3])
 				self.assertTrue(m[1] == m[2])
-				self.assertTrue(len(m[4:-2]) % 256 == m[1])
+				self.assertTrue(len(m[4:-2]) & 0xff == m[1])
 
 			if m[0] == 0x10:
-				self.assertTrue(sum(m[1:3]) % 256 == m[-2])
+				self.assertTrue(sum(m[1:3]) & 0xff == m[-2])
 
 		s = " ".join("{:02x}".format(k) for k in m)
 #		print '< ' + s
@@ -47,7 +47,7 @@ class SimplesticTest(unittest.TestCase):
 		self.transmit(outstr)
 		s = self.receive(32)
 		#self.assertTrue(s == instr.lower())
-		self.assertTrue(not (re.match(instr.lower(), s) is None))
+		self.assertTrue(re.match(instr.lower(), s))
 
 	def testOpenCover(self):
 		self.command("68 0a 0a 68 53 01 40 01 0c 01 12 70 00 00 24 16", "^10 28 01 29 16$");
