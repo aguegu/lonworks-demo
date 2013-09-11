@@ -21,8 +21,22 @@ class SimplesticTest(unittest.TestCase):
 #		print "> " + s 
 
 	def receive(self, n):
-		tmp = self.sp.read(n)
-		s = " ".join("{:02x}".format(ord(c)) for c in tmp)
+		m = memoryview(self.sp.read(n)).tolist()
+
+		if len(m):
+			self.assertTrue(m[0] == 0x68 or m[0] == 0x10)
+			self.assertTrue(m[-1] == 0x16)
+		
+			if m[0] == 0x68:
+				self.assertTrue(sum(m[4:-2]) % 256 == m[-2])
+				self.assertTrue(m[0] == m[3])
+				self.assertTrue(m[1] == m[2])
+				self.assertTrue(len(m[4:-2]) % 256 == m[1])
+
+			if m[0] == 0x10:
+				self.assertTrue(sum(m[1:3]) % 256 == m[-2])
+
+		s = " ".join("{:02x}".format(k) for k in m)
 #		print '< ' + s
 		return s
 
