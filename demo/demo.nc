@@ -303,7 +303,7 @@ void onRequest6803() {
 void onRequest6804() {
     uint8_t * p;
     p = (uint8_t *)getAsduHead(&package_rx) + 6;
-    nvoLastTiming.second = (uint8_t)((p[0] + (p[1] << 8)) / 1000);
+    nvoLastTiming.second = (uint8_t)((p[0] + ((uint16_t)p[1] << 8)) / 1000);
     nvoLastTiming.minute = p[2] & 0x3f;
     nvoLastTiming.hour = p[3] & 0x1f;
     nvoLastTiming.day = p[4] & 0x1f;
