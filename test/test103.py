@@ -3,22 +3,49 @@ import unittest
 import serial
 import re
 
+class Node:
+	def __init__(self, serialport, address):
+		self.sp = serialport
+		self.address = address
+
+	def command10(self, function):
+		s = bytearray()
+		s.append(0x10)
+		s.append(function)
+		s.append(self.address)
+		s.append(function + self.address)
+		s.append(0x16)
+		return s
+
+	@staticmethod
+	def getHex(ba):
+		return " ".join("{:02x}".format(k) for k in ba)
+
+	def open(self):
+		self.sp.open()
+
+	def close(self):
+		self.sp.close()
+		
+
 class SimplesticTest(unittest.TestCase):
 
 	def setUp(self):
-		self.sp = serial.Serial()
-		self.sp.port = '/dev/ttyUSB0'
-		self.sp.baudrate = 9600 
-		self.sp.parity = serial.PARITY_EVEN
-		self.sp.timeout = 0.06
-		self.sp.open()
+		sp = serial.Serial();
+		sp.port = '/dev/ttyUSB0'
+		sp.baudrate = 9600 
+		sp.parity = serial.PARITY_EVEN
+		sp.timeout = 0.06
+		self.node = Node(sp, 0x01)
+		self.node.open()
+		print Node.getHex(self.node.command10(0x28))
 
 	def tearDown(self):
-		self.sp.close()
+		self.node.close()
 
 	def transmit(self, s):
 		self.sp.write(bytearray.fromhex(s))
-#		print "> " + s 
+		print "\n> " + s 
 
 	def receive(self, n):
 		m = memoryview(self.sp.read(n)).tolist()
@@ -37,11 +64,11 @@ class SimplesticTest(unittest.TestCase):
 				self.assertTrue(sum(m[1:3]) & 0xff == m[-2])
 
 		s = " ".join("{:02x}".format(k) for k in m)
-#		print '< ' + s
+		print '< ' + s
 		return s
 
 	def testPortOpen(self):
-		self.assertTrue(self.sp.isOpen())
+		self.assertTrue(self.node.sp.isOpen())
 
 	def command(self, outstr, instr):
 		self.transmit(outstr)
