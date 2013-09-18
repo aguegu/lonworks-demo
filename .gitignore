@@ -4,4 +4,5 @@ demo/Release
 demo.NbWsp
 demo.NbDt
 *.swp
+*.pyc
 
