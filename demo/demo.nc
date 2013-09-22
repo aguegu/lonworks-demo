@@ -192,7 +192,11 @@ network input SNVT_angle_f nviAngle;
 network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
 network input SNVT_switch nviTileAlarm;
+
 network input SNVT_date_time nviUpdateOn;
+network input SNVT_count nviTileCount;
+network input SNVT_count nviHitCount;
+network input SNVT_count nviOpenCount;
 
 void onRequest6804(void);
 void onRequest6803(void);
@@ -268,13 +272,9 @@ when (package_received) {
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
         appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
         appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
-        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 3));
-        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 2));
-        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 1));
-        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 0));
         appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
         appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
-        appendFrame68(&package_tx, &nviHit, 4);
+        appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
         appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
         status |= nviLocked.state == 1? 0x04:0x00;
         status |= nviTileAlarm.state == 1? 0x02:0x00;
