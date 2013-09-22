@@ -5,7 +5,7 @@
 
 #pragma specify_io_clock "10 MHz"
 
-IO_8 sci baud(SCI_9600) __parity(even) iosci;
+IO_8 sci baud(SCI_9600) iosci;
 
 #define BUFF_SIZE 128
 

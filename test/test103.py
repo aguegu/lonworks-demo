@@ -17,7 +17,7 @@ class SimplesticTest(unittest.TestCase):
 		sp.parity = serial.PARITY_NONE
 		sp.timeout = 0.06
 
-		self.node = Node(sp, 0x08)
+		self.node = Node(sp, 0x01)
 		self.node.open()
 
 	def tearDown(self):
@@ -46,14 +46,15 @@ class SimplesticTest(unittest.TestCase):
 				self.assertTrue(sum(m[1:3]) & 0xff == m[-2])
 		return m
 
-#	def testOpenCover(self):
-#		time.sleep(0.5)
-#		self.command(self.node.openCover(), Node.getHex(self.node.frame10(0x28)))
+	def testOpenCover(self):
+		time.sleep(0.5)
+		m = self.command(self.node.openCover())
+		self.assertTrue(re.match(Node.getHex(self.node.frame10(0x28)), Node.getHex(m)))
 
-#	def testCloseCover(self):
-#		time.sleep(0.5)
-#		m = self.command(self.node.closeCover())
-#		self.assertTrue(re.match(Node.getHex(self.node.frame10(0x28)), Node.getHex(m)))
+	def testCloseCover(self):
+		time.sleep(0.5)
+		m = self.command(self.node.closeCover())
+		self.assertTrue(re.match(Node.getHex(self.node.frame10(0x28)), Node.getHex(m)))
 	
 
 	def testInquireCover(self):
@@ -88,10 +89,10 @@ class SimplesticTest(unittest.TestCase):
 
 		self.assertTrue(status or events)
 
-#	def testTiming(self):
-#		time.sleep(0.5)
-#		self.node.adjustTime()
-#		self.command(self.node.adjustTime())
+	def testTiming(self):
+		time.sleep(0.5)
+		self.node.adjustTime()
+		self.command(self.node.adjustTime())
 
 if __name__ == '__main__':
 	unittest.main()
