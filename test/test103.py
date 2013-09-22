@@ -4,6 +4,7 @@ import serial
 import datetime
 import re
 import time
+import struct
 
 from node103 import Node
 
@@ -26,11 +27,10 @@ class SimplesticTest(unittest.TestCase):
 	def testPortOpen(self):
 		self.assertTrue(self.node.sp.isOpen())
 
-	def command(self, outstr, instr):
+	def command(self, outstr):
 		self.node.transmit(outstr)
 		print "\n> " + Node.getHex(outstr)
-		print "= " + instr
-		m = self.node.receive(32)
+		m = self.node.receive(64)
 		print "< " + Node.getHex(m)
 		if len(m):
 			self.assertTrue(m[0] == 0x68 or m[0] == 0x10)
@@ -44,25 +44,54 @@ class SimplesticTest(unittest.TestCase):
 
 			if m[0] == 0x10:
 				self.assertTrue(sum(m[1:3]) & 0xff == m[-2])
+		return m
 
-		self.assertTrue(re.match(instr.lower(), Node.getHex(m)))
+#	def testOpenCover(self):
+#		time.sleep(0.5)
+#		self.command(self.node.openCover(), Node.getHex(self.node.frame10(0x28)))
 
-	def testOpenCover(self):
-		time.sleep(0.5)
-		self.command(self.node.openCover(), Node.getHex(self.node.frame10(0x28)))
-
-	def testCloseCover(self):
-		time.sleep(0.5)
-		self.command(self.node.closeCover(), Node.getHex(self.node.frame10(0x28)))
+#	def testCloseCover(self):
+#		time.sleep(0.5)
+#		m = self.command(self.node.closeCover())
+#		self.assertTrue(re.match(Node.getHex(self.node.frame10(0x28)), Node.getHex(m)))
+	
 
 	def testInquireCover(self):
 		time.sleep(0.5)
-		self.command(self.node.frame10(0x5b), "68 1a 1a 68 08 %02x 32 83 00 00 0c 01 01 08 ([\da-f]{2} ){4}01 09 ([\da-f]{2} ){4}01 01 ([\da-f]{2} ){5}16" % (self.node.address))
+		m = self.command(self.node.frame10(0x5b))
+		status = re.match(("68 1a 1a 68 08 %02x 32 83 00 00 0c 01 " +
+			"(([\da-f]{2} ){6}){3}[\da-z]{2} 16")  % (self.node.address), Node.getHex(m))
 
-	def testTiming(self):
-		time.sleep(0.5)
-		self.node.adjustTime()
-		self.command(self.node.adjustTime(), "")
+		event_names = ["", "shock", "tile", "open"]
+		if status:
+			angle = struct.unpack('f', m[14:18])[0]
+			print "angle: %.2f," % angle,
+			stroke = struct.unpack('f', m[20:24])[0]
+			print "stroke: %.2f," % stroke,
+			print "status: %02x," % m[26],
+			print "hasevent: %r," % bool(m[26] & 0x01),
+			print "angle alarm: %r," % bool(m[26] & 0x02),
+			print "magnet in position: %r" % bool(m[26] & 0x04)
+
+		events = re.match(("68 (?:(?:(?:13)|(?:1d)|(?:27)) ){2}68 08 %02x 29 8[1-3] 00 00 0c 01") % self.node.address, Node.getHex(m))
+		if events:
+			i = 13
+			while i + 10 < len(m):
+				j = m[i]
+#				print "%r" % Node.getHex(m[i:i+10])
+				print "on %02d:%02d:%02d," % (m[i + 4], m[i+3],m[i+2]), 
+				print "count: %d," % m[i+5],
+				print "event: %s," % event_names[j],
+				if j == 0x01 or j == 0x02:
+					print "val: %.2f" % struct.unpack('f', m[i+6:i+10])
+				i += 10
+
+		self.assertTrue(status or events)
+
+#	def testTiming(self):
+#		time.sleep(0.5)
+#		self.node.adjustTime()
+#		self.command(self.node.adjustTime())
 
 if __name__ == '__main__':
 	unittest.main()
