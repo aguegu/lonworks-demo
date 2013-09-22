@@ -268,7 +268,11 @@ when (package_received) {
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
         appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
         appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
-        appendFrame68(&package_tx, &nviAngle, 4);
+        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 3));
+        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 2));
+        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 1));
+        // appendByteToFrame68(&package_tx, *((uint8_t *)(&nviAngle) + 0));
+        appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
         appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
         appendFrame68(&package_tx, &nviHit, 4);
         appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);

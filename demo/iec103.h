@@ -50,6 +50,12 @@ void appendFrame68(Record *p, const void * buff, uint8_t len) {
 	p->length += len;
 }
 
+void appendFrame68Reverse(Record *p, const uint8_t * buff, uint8_t len) {
+	while (len) {
+		*(p->buff + p->length++) = (uint8_t)(*(buff+(--len)));
+	}
+}
+
 void completeFrame68(Record *p) {
 	uint8_t i, sum;
 	for (i=4, sum=0; i < p->length; i++)
