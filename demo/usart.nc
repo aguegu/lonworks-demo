@@ -125,11 +125,6 @@ void usart_writeBytes(uint8_t *buff, uint8_t length) {
 		usart_write(*buff++);
 }
 
-void usart_writeString(const char *buff) {
-	while (*buff)
-		usart_write(*buff++);
-}
-
 void usart_flush(void) {
 	uint8_t c;
 	while (usart_cached()) {

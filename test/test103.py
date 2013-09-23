@@ -46,6 +46,7 @@ class SimplesticTest(unittest.TestCase):
 				self.assertTrue(sum(m[1:3]) & 0xff == m[-2])
 		return m
 
+	@unittest.skip("without open")
 	def testOpenCover(self):
 		time.sleep(0.5)
 		m = self.command(self.node.openCover())

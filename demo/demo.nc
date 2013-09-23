@@ -187,7 +187,7 @@ uint8_t package_received;
 network output SNVT_time_stamp nvoLastTiming;
 
 network input SNVT_count nviAddressRs485 = 1;
-network input SNVT_switch nvoCoverControl;
+network output SNVT_switch nvoCoverControl;
 network input SNVT_angle_f nviAngle;
 network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
@@ -330,9 +330,8 @@ when (package_received) {
     usart_writeBytes(package_tx.buff, package_tx.length);
     usart_flush();
 
-    clear(&package_tx);
-
     refresh();
+    clear(&package_tx);
 }
 
 when (nv_update_occurs(nviUpdateOn)) {
