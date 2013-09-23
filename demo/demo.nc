@@ -192,6 +192,7 @@ network input SNVT_angle_f nviAngle;
 network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
 network input SNVT_switch nviTileAlarm;
+network input SNVT_switch nviActive;
 
 network input SNVT_date_time nviUpdateOn;
 network input SNVT_count nviTileCount;
@@ -254,7 +255,9 @@ when (usart_available()) {
 }
 
 far const uint8_t ASDU_HEAD_100B[6] = {0x32, 0x83, 0x00, 0x00, 0x0c, 0x01};
+far const uint8_t ASDU_HEAD_6808[7] = {0x29, 0x80, 0x00, 0x00, 0x0c, 0x01, 0x01};
 far const uint8_t ARGUMENT_INDEX[3][2] = {{0x01, 0x08}, {0x01, 0x09}, {0x01, 0x01}};
+far const uint8_t EVENT_INDEX[3][2] = {{0x01, 0x06}, {0x02, 0x06}, {0x03, 0x06}};
 
 when (package_received) {
     uint8_t status;
@@ -270,19 +273,58 @@ when (package_received) {
         break;
     case 0x0b:
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
-        appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
-        appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
-        appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
-        appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
-        appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
-        appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
-        status |= nviLocked.state == 1? 0x04:0x00;
-        status |= nviTileAlarm.state == 1? 0x02:0x00;
-        appendByteToFrame68(&package_tx, status);
-        appendByteToFrame68(&package_tx, 0x00);
-        appendByteToFrame68(&package_tx, 0x00);
-        appendByteToFrame68(&package_tx, 0x00);
+
+        if (nviHitCount ==0 && nviTileCount == 0 && nviOpenCount == 0) {
+            appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
+            appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
+            appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
+            appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
+            appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
+            appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
+            status |= nviLocked.state == 1? 0x04:0x00;
+            status |= nviTileAlarm.state == 1? 0x02:0x00;
+            appendByteToFrame68(&package_tx, status);
+            appendByteToFrame68(&package_tx, 0x00);
+            appendByteToFrame68(&package_tx, 0x00);
+            appendByteToFrame68(&package_tx, 0x00);
+        } else {
+            appendFrame68(&package_tx, ASDU_HEAD_6808, 7);
+            if (nviHitCount) {
+                appendFrame68(&package_tx, EVENT_INDEX[0], 2);
+                appendByteToFrame68(&package_tx, nviUpdateOn.second);
+                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
+                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
+                appendByteToFrame68(&package_tx, (uint8_t)nviHitCount);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
+                package_tx.buff[7]++;
+            }
+
+            if (nviTileCount) {
+                appendFrame68(&package_tx, EVENT_INDEX[1], 2);
+                appendByteToFrame68(&package_tx, nviUpdateOn.second);
+                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
+                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
+                appendByteToFrame68(&package_tx, (uint8_t)nviTileCount);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
+                package_tx.buff[7]++;
+            }
+
+            if (nviOpenCount) {
+                appendFrame68(&package_tx, EVENT_INDEX[2], 2);
+                appendByteToFrame68(&package_tx, nviUpdateOn.second);
+                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
+                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
+                appendByteToFrame68(&package_tx, (uint8_t)nviOpenCount);
+                appendByteToFrame68(&package_tx, 0x00);
+                appendByteToFrame68(&package_tx, 0x00);
+                appendByteToFrame68(&package_tx, 0x00);
+                appendByteToFrame68(&package_tx, 0x00);
+                package_tx.buff[7]++;
+            }
+        }
+
         completeFrame68(&package_tx);
+        break;
     }
 
     usart_writeBytes(package_tx.buff, package_tx.length);
