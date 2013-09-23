@@ -15,7 +15,7 @@ class SimplesticTest(unittest.TestCase):
 		sp.port = '/dev/ttyUSB0'
 		sp.baudrate = 9600 
 		sp.parity = serial.PARITY_NONE
-		sp.timeout = 0.06
+		sp.timeout = 0.07
 
 		self.node = Node(sp, 0x01)
 		self.node.open()
