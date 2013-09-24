@@ -264,6 +264,8 @@ when (package_received) {
     package_received = 0;
 	status = 0;
 
+    if (nviActive.state == 0) return;
+
     switch (getFunctionCode(&package_rx)) {
     case 0x03:
         onRequest6803();
