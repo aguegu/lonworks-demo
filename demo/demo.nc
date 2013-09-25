@@ -191,11 +191,11 @@ network output SNVT_switch nvoCoverControl;
 network input SNVT_angle_f nviAngle;
 network input SNVT_press_f nviHit;
 network input SNVT_switch nviLocked;
-network input SNVT_switch nviTileAlarm;
+network input SNVT_switch nviTiltAlarm;
 network input SNVT_switch nviActive;
 
 network input SNVT_date_time nviUpdateOn;
-network input SNVT_count nviTileCount;
+network input SNVT_count nviTiltCount;
 network input SNVT_count nviHitCount;
 network input SNVT_count nviOpenCount;
 
@@ -262,7 +262,6 @@ far const uint8_t EVENT_INDEX[3][2] = {{0x01, 0x06}, {0x02, 0x06}, {0x03, 0x06}}
 when (package_received) {
     uint8_t status;
     package_received = 0;
-	status = 0;
 
     if (nviActive.state == 0) return;
 
@@ -276,15 +275,17 @@ when (package_received) {
     case 0x0b:
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
 
-        if (nviHitCount ==0 && nviTileCount == 0 && nviOpenCount == 0) {
+        if (nviHitCount ==0 && nviTiltCount == 0 && nviOpenCount == 0) {
             appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
             appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
+            status = 0;
+            status |= nviHitCount? 0x01: 0x00;
+            status |= nviTiltAlarm.state == 1? 0x02:0x00;
             status |= nviLocked.state == 1? 0x04:0x00;
-            status |= nviTileAlarm.state == 1? 0x02:0x00;
             appendByteToFrame68(&package_tx, status);
             appendByteToFrame68(&package_tx, 0x00);
             appendByteToFrame68(&package_tx, 0x00);
@@ -301,12 +302,12 @@ when (package_received) {
                 package_tx.buff[7]++;
             }
 
-            if (nviTileCount) {
+            if (nviTiltCount) {
                 appendFrame68(&package_tx, EVENT_INDEX[1], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)nviTileCount);
+                appendByteToFrame68(&package_tx, (uint8_t)nviTiltCount);
                 appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
                 package_tx.buff[7]++;
             }
