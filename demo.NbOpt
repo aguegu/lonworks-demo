@@ -12,5 +12,17 @@
 			<DeviceTemplateFlags>
 			</DeviceTemplateFlags>
 		</NBNetwork>
+		<NBNetwork Name="Network 4">
+			<DeviceItems>
+			</DeviceItems>
+			<DeviceTemplateFlags>
+			</DeviceTemplateFlags>
+		</NBNetwork>
+		<NBNetwork Name="demo 2">
+			<DeviceItems>
+			</DeviceItems>
+			<DeviceTemplateFlags>
+			</DeviceTemplateFlags>
+		</NBNetwork>
 	</NBNetworks>
 </NBProjectOptions>

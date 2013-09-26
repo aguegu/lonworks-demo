@@ -17,8 +17,9 @@ class SimplesticTest(unittest.TestCase):
 		sp.parity = serial.PARITY_NONE
 		sp.timeout = 0.07
 
-		self.node = Node(sp, 0x01)
+		self.node = Node(sp, 0x08)
 		self.node.open()
+		self.event_names = {1: "shock", 2: "tilt", 3: "open"}
 
 	def tearDown(self):
 		self.node.close()
@@ -61,10 +62,25 @@ class SimplesticTest(unittest.TestCase):
 	def testInquireCover(self):
 		time.sleep(0.5)
 		m = self.command(self.node.frame10(0x5b))
+		events = re.match(("68 (?:(?:(?:13)|(?:1d)|(?:27)) ){2}68 08 %02x 29 8[1-3] 00 00 0c 01") % self.node.address, Node.getHex(m))
+
+		if events:
+			i = 13
+			while i + 10 < len(m):
+				j = m[i]
+#				print "%r" % Node.getHex(m[i:i+10])
+				print "on %02d:%02d:%02d," % (m[i + 4], m[i+3],m[i+2]), 
+				print "count: %d," % m[i+5],
+				print "event: %s," % self.event_names[j],
+				if j == 0x01 or j == 0x02:
+					print "val: %.2f" % struct.unpack('f', m[i+6:i+10])
+				i += 10
+			time.sleep(0.5)
+			m = self.command(self.node.frame10(0x5b))
+
 		status = re.match(("68 1a 1a 68 08 %02x 32 83 00 00 0c 01 " +
 			"(([\da-f]{2} ){6}){3}[\da-z]{2} 16")  % (self.node.address), Node.getHex(m))
 
-		event_names = ["", "shock", "tile", "open"]
 		if status:
 			angle = struct.unpack('f', m[14:18])[0]
 			print "angle: %.2f," % angle,
@@ -75,18 +91,6 @@ class SimplesticTest(unittest.TestCase):
 			print "angle alarm: %r," % bool(m[26] & 0x02),
 			print "magnet in position: %r" % bool(m[26] & 0x04)
 
-		events = re.match(("68 (?:(?:(?:13)|(?:1d)|(?:27)) ){2}68 08 %02x 29 8[1-3] 00 00 0c 01") % self.node.address, Node.getHex(m))
-		if events:
-			i = 13
-			while i + 10 < len(m):
-				j = m[i]
-#				print "%r" % Node.getHex(m[i:i+10])
-				print "on %02d:%02d:%02d," % (m[i + 4], m[i+3],m[i+2]), 
-				print "count: %d," % m[i+5],
-				print "event: %s," % event_names[j],
-				if j == 0x01 or j == 0x02:
-					print "val: %.2f" % struct.unpack('f', m[i+6:i+10])
-				i += 10
 
 		self.assertTrue(status or events)
 
