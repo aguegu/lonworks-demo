@@ -17,9 +17,9 @@ class SimplesticTest(unittest.TestCase):
 		sp.parity = serial.PARITY_NONE
 		sp.timeout = 0.07
 
-		self.node = Node(sp, 0x08)
+		self.node = Node(sp, 0x01)
 		self.node.open()
-		self.event_names = {1: "shock", 2: "tilt", 3: "open"}
+		self.event_names = {1: "hit", 2: "tilt", 3: "open"}
 
 	def tearDown(self):
 		self.node.close()
@@ -87,7 +87,7 @@ class SimplesticTest(unittest.TestCase):
 			stroke = struct.unpack('f', m[20:24])[0]
 			print "stroke: %.2f," % stroke,
 			print "status: %02x," % m[26],
-			print "hasevent: %r," % bool(m[26] & 0x01),
+			print "hit: %r," % bool(m[26] & 0x01),
 			print "angle alarm: %r," % bool(m[26] & 0x02),
 			print "magnet in position: %r" % bool(m[26] & 0x04)
 

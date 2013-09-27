@@ -199,6 +199,10 @@ network input SNVT_count nviTiltCount;
 network input SNVT_count nviHitCount;
 network input SNVT_count nviOpenCount;
 
+uint8_t _tilt_count;
+uint8_t _hit_count;
+uint8_t _open_count;
+
 void onRequest6804(void);
 void onRequest6803(void);
 void refresh(void);
@@ -275,7 +279,7 @@ when (package_received) {
     case 0x0b:
         initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
 
-        if (nviHitCount ==0 && nviTiltCount == 0 && nviOpenCount == 0) {
+        if (_hit_count ==0 && _tilt_count == 0 && _open_count == 0) {
             appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
             appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
@@ -283,7 +287,7 @@ when (package_received) {
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
             status = 0;
-            status |= nviHitCount? 0x01: 0x00;
+            status |= _hit_count? 0x01: 0x00;
             status |= nviTiltAlarm.state == 1? 0x02:0x00;
             status |= nviLocked.state == 1? 0x04:0x00;
             appendByteToFrame68(&package_tx, status);
@@ -292,38 +296,42 @@ when (package_received) {
             appendByteToFrame68(&package_tx, 0x00);
         } else {
             appendFrame68(&package_tx, ASDU_HEAD_6808, 7);
-            if (nviHitCount) {
+            if (_hit_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[0], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)nviHitCount);
+                appendByteToFrame68(&package_tx, (uint8_t)_hit_count);
                 appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
                 package_tx.buff[7]++;
             }
 
-            if (nviTiltCount) {
+            if (_tilt_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[1], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)nviTiltCount);
+                appendByteToFrame68(&package_tx, (uint8_t)_tilt_count);
                 appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
                 package_tx.buff[7]++;
             }
 
-            if (nviOpenCount) {
+            if (_open_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[2], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)nviOpenCount);
+                appendByteToFrame68(&package_tx, (uint8_t)_open_count);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
                 package_tx.buff[7]++;
             }
+
+            _open_count = 0;
+            _tilt_count = 0;
+            _hit_count = 0;
         }
 
         completeFrame68(&package_tx);
@@ -338,7 +346,20 @@ when (package_received) {
 }
 
 when (nv_update_occurs(nviUpdateOn)) {
+    if (_tilt_count == 0 && nviTiltCount > 0)
+        _tilt_count = 1;
 
+    _tilt_count += (uint8_t)(nviTiltCount < 2 ? 0: (nviTiltCount - 1));
+
+    if (_hit_count == 0 && nviHitCount > 0)
+        _hit_count = 0;
+
+    _hit_count += (uint8_t)(nviHitCount < 2 ? 0: (nviHitCount - 1));
+
+    if (_open_count == 0 && nviOpenCount > 0)
+        _open_count = 1;
+
+    _open_count += (uint8_t)(nviOpenCount < 2 ? 0: (nviOpenCount - 1));
 }
 
 void onRequest6803() {
