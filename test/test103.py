@@ -75,7 +75,7 @@ class SimplesticTest(unittest.TestCase):
 				if j == 0x01 or j == 0x02:
 					print "val: %.2f" % struct.unpack('f', m[i+6:i+10])
 				i += 10
-			time.sleep(0.5)
+	#		time.sleep(0.5)
 			m = self.command(self.node.frame10(0x5b))
 
 		status = re.match(("68 1a 1a 68 08 %02x 32 83 00 00 0c 01 " +
@@ -87,7 +87,7 @@ class SimplesticTest(unittest.TestCase):
 			stroke = struct.unpack('f', m[20:24])[0]
 			print "stroke: %.2f," % stroke,
 			print "status: %02x," % m[26],
-			print "hit: %r," % bool(m[26] & 0x01),
+			print "hit alarm: %r," % bool(m[26] & 0x01),
 			print "angle alarm: %r," % bool(m[26] & 0x02),
 			print "magnet in position: %r" % bool(m[26] & 0x04)
 

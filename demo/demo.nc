@@ -203,6 +203,9 @@ uint8_t _tilt_count;
 uint8_t _hit_count;
 uint8_t _open_count;
 
+float_type _tilt_value;
+float_type _hit_value;
+
 void onRequest6804(void);
 void onRequest6803(void);
 void refresh(void);
@@ -302,7 +305,7 @@ when (package_received) {
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
                 appendByteToFrame68(&package_tx, (uint8_t)_hit_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&_hit_value, 4);
                 package_tx.buff[7]++;
             }
 
@@ -312,7 +315,7 @@ when (package_received) {
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
                 appendByteToFrame68(&package_tx, (uint8_t)_tilt_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&_tilt_value, 4);
                 package_tx.buff[7]++;
             }
 
@@ -332,6 +335,9 @@ when (package_received) {
             _open_count = 0;
             _tilt_count = 0;
             _hit_count = 0;
+            
+            _hit_value = fl_zero;
+            _tilt_value = fl_zero;
         }
 
         completeFrame68(&package_tx);
@@ -360,6 +366,9 @@ when (nv_update_occurs(nviUpdateOn)) {
         _open_count = 1;
 
     _open_count += (uint8_t)(nviOpenCount < 2 ? 0: (nviOpenCount - 1));
+
+	fl_max(&_tilt_value, &nviAngle, &_tilt_value);
+	fl_max(&_hit_value, &nviHit, &_hit_value);
 }
 
 void onRequest6803() {
