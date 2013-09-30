@@ -6,7 +6,7 @@
 	</Contents>
 	<SourceFileName>cover.nc</SourceFileName>
 	<Description></Description>
-	<ProgramID>9000004600040407</ProgramID>
+	<ProgramID>9000004600040400</ProgramID>
 	<OutputFolder>.\</OutputFolder>
 	<LNSDeviceTemplateName>cover</LNSDeviceTemplateName>
 	<IncludeSearchPath>$LonWorks$\NodeBuilder\CodeWizard\Include</IncludeSearchPath>
@@ -31,7 +31,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x3572</BootID>
+				<BootID>0x2B9</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -63,7 +63,7 @@
 				</ListingOptions>
 			</Linker>
 			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
-				<BootID>0x5F6E</BootID>
+				<BootID>0x2B9</BootID>
 				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
 				</RebootConfiguration>
 				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
@@ -111,7 +111,7 @@
 	</SourceFileList>
 	<Interface>
 		<Dependencies>
-			<BIF>0xB35E</BIF>
+			<BIF>0x9A15</BIF>
 			<BF2>0x0</BF2>
 			<XF2>0x0</XF2>
 			<XF3>0x0</XF3>

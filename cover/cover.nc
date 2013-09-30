@@ -186,16 +186,19 @@ network input SNVT_time_stamp nviLastTiming;
 
 network input SNVT_count nviAddressRs485 = 8;
 network input SNVT_switch nviCoverControl;
-network output SNVT_angle_f nvoAngle;
-network output SNVT_press_f nvoHit;
-network output SNVT_switch nvoLocked;
-network output SNVT_switch nvoTiltAlarm;
-network output SNVT_switch nvoActive;
 
-network output SNVT_date_time nvoUpdateOn;
+network output SNVT_angle_f nvoTiltValue;
 network output SNVT_count nvoTiltCount;
+network output SNVT_switch nvoTiltAlarm;
+
+network output SNVT_press_f nvoHitValue;
 network output SNVT_count nvoHitCount;
-network output SNVT_count nvoOpenCount;
+
+network output SNVT_switch nvoLocked;
+network output SNVT_count nvoUnlockedCount;
+
+network output SNVT_switch nvoActive;
+network output SNVT_date_time nvoUpdateOn;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -335,10 +338,10 @@ when (package_received) {
     case 0x1a:
         has_event = 0;
 		getReversedS32(&s, package_rx.buff + 14);
-        nvoAngle = *(SNVT_angle_f *)(&s);
+        nvoTiltValue = *(SNVT_angle_f *)(&s);
 
 		getReversedS32(&s, package_rx.buff + 20);
-        nvoHit = *(SNVT_press_f *)(&s);
+        nvoHitValue = *(SNVT_press_f *)(&s);
 
         nvoTiltAlarm.state = package_rx.buff[26] & 0x02 ? 1 : 0;
         nvoLocked.state = package_rx.buff[26] & 0x04 ? 1 : 0;
@@ -359,17 +362,17 @@ when (package_received) {
                 case 0x01:
                     nvoHitCount = package_rx.buff[i + 5];
                		getReversedS32(&s, package_rx.buff + i + 6);
-                    nvoHit = *(SNVT_press_f *)(&s);
+                    nvoHitValue = *(SNVT_press_f *)(&s);
                     got_hit = TRUE;
                     break;
                 case 0x02:
                     nvoTiltCount = package_rx.buff[i + 5];
                		getReversedS32(&s, package_rx.buff + i + 6);
-                    nvoAngle = *(SNVT_angle_f *)(&s);
+                    nvoTiltValue = *(SNVT_angle_f *)(&s);
                     got_tilt = TRUE;
                     break;
                 case 0x03:
-                    nvoOpenCount = package_rx.buff[i + 5];
+                    nvoUnlockedCount = package_rx.buff[i + 5];
                     nvoLocked.state = 0;
                     got_open = TRUE;
                     break;
@@ -379,7 +382,7 @@ when (package_received) {
 
         if (!got_hit) nvoHitCount = 0;
         if (!got_tilt) nvoTiltCount = 0;
-        if (!got_open) nvoOpenCount = 0;
+        if (!got_open) nvoUnlockedCount = 0;
 
         nvoUpdateOn.second = package_rx.buff[15];
         nvoUpdateOn.minute = package_rx.buff[16];
