@@ -10,6 +10,9 @@
 		<DeviceTemplateFileName Name="demo\demo.NbDt">
 			<OptionFlags>0x0</OptionFlags>
 		</DeviceTemplateFileName>
+		<DeviceTemplateFileName Name="cover\cover.NbDt">
+			<OptionFlags>0x0</OptionFlags>
+		</DeviceTemplateFileName>
 	</DeviceTemplateFileNames>
 	<HardwareTemplateFileNames>
 	</HardwareTemplateFileNames>

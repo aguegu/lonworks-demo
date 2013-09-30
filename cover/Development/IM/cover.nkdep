@@ -1,0 +1,17 @@
+; Echelon Dependency File - do not edit.
+; Z:\shared\workspace\lonworks\demo\cover\Development\IM\cover.nkdep
+; Created Monday, September 30, 2013, 16:10:12
+
+[Global]
+Provider=Echelon NodeBuilder Make Facility
+Version=1
+Inputs=0
+Outputs=0
+Switches=0
+Parameters=2
+
+[Switches]
+
+[Parameters]
+BuildtimeH=30326263
+BuildtimeL=-1969862144

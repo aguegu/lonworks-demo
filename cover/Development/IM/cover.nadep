@@ -1,0 +1,32 @@
+; Echelon Dependency File - do not edit.
+; Z:\shared\workspace\lonworks\demo\cover\Development\IM\cover.nadep
+; Created Monday, September 30, 2013, 16:10:11
+
+[Global]
+Provider=NEURON Assembler
+Version=1
+Inputs=1
+Outputs=1
+Switches=1
+Parameters=0
+
+[Input_1]
+Basename=cover.ns
+Fullname=Z:\shared\workspace\lonworks\demo\cover\Development\IM\cover.ns
+Type=0
+Size=37017
+TimestampHigh=0x1cebdb4
+TimestampLow=0x7c07f54e
+
+[Output_1]
+Basename=cover.no
+Fullname=Z:\shared\workspace\lonworks\demo\cover\Development\IM\cover.no
+Type=0
+Size=27438
+TimestampHigh=0x1cebdb4
+TimestampLow=0x7c12558e
+
+[Switches]
+8=Z:\shared\workspace\lonworks\demo\cover\Development\IM\cover
+
+[Parameters]

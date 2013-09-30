@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NBDeviceTemplate ManageProgramID="TRUE" ReRegisterPlugIn="TRUE" UseProjectIncludePath="TRUE">
+	<Contents MajorVersion="0" MinorVersion="1" CreationDate="1232468580" Format="2" Content="4">
+		<FileDescription>NodeBuilder Device Template File</FileDescription>
+		<UpgradeStatus>0</UpgradeStatus>
+	</Contents>
+	<SourceFileName>cover.nc</SourceFileName>
+	<Description></Description>
+	<ProgramID>9000004600040407</ProgramID>
+	<OutputFolder>.\</OutputFolder>
+	<LNSDeviceTemplateName>cover</LNSDeviceTemplateName>
+	<IncludeSearchPath>$LonWorks$\NodeBuilder\CodeWizard\Include</IncludeSearchPath>
+	<MinModelNumber>0x00</MinModelNumber>
+	<MaxModelNumber>0x07</MaxModelNumber>
+	<TargetDevices>
+		<TargetDevice Name="Development" HostBased="FALSE">
+			<PreviousLNSTemplateName>cover</PreviousLNSTemplateName>
+			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
+			<Compiler DisableOptimizer="TRUE" RelaxedCasting="FALSE">
+				<Defines>_DEBUG</Defines>
+				<DebugKernelOptions UseDebugKernel="TRUE" NodeRecoveryOnly="FALSE" NoNodeRecovery="FALSE" NoEventNotify="FALSE" NoResetEvent="FALSE" NoFunctionExecute="FALSE" ExpandStatements="TRUE">
+				</DebugKernelOptions>
+			</Compiler>
+			<Assembler>
+				<ListingOptions GenerateListing="FALSE">
+				</ListingOptions>
+			</Assembler>
+			<Linker Compatible="FALSE" OrderPreserving="FALSE" GenerateSymbolFile="FALSE">
+				<Libraries></Libraries>
+				<ListingOptions UseVerboseMessages="TRUE" GenerateLinkSummary="FALSE" GenerateMapFile="TRUE">
+				</ListingOptions>
+			</Linker>
+			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
+				<BootID>0x3572</BootID>
+				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
+				</RebootConfiguration>
+				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
+				</RebootApplication>
+				<RebootCommParameters ChecksumError="FALSE" TypeRateMismatch="FALSE" Always="FALSE">
+				</RebootCommParameters>
+			</Exporter>
+			<TargetConfiguration ExportConfigured="FALSE" CloneDomain="FALSE" NoDomain="FALSE" DomainID="00" AuthenticationKey="000000000000" Location="" UseAuthentication="FALSE">
+				<SubnetID>0x1</SubnetID>
+				<NodeID>0x1</NodeID>
+				<NonGrpRcvTimer>0x6</NonGrpRcvTimer>
+			</TargetConfiguration>
+		</TargetDevice>
+		<TargetDevice Name="Release" HostBased="FALSE">
+			<PreviousLNSTemplateName>cover</PreviousLNSTemplateName>
+			<HardwareTemplate>$HARDWARETEMPLATES$\FT 5000 Evaluation Board.NbHwt</HardwareTemplate>
+			<Compiler DisableOptimizer="FALSE" RelaxedCasting="FALSE">
+				<Defines></Defines>
+				<DebugKernelOptions UseDebugKernel="FALSE" NodeRecoveryOnly="FALSE" NoNodeRecovery="FALSE" NoEventNotify="FALSE" NoResetEvent="FALSE" NoFunctionExecute="FALSE" ExpandStatements="FALSE">
+				</DebugKernelOptions>
+			</Compiler>
+			<Assembler>
+				<ListingOptions GenerateListing="FALSE">
+				</ListingOptions>
+			</Assembler>
+			<Linker Compatible="FALSE" OrderPreserving="FALSE" GenerateSymbolFile="FALSE">
+				<Libraries></Libraries>
+				<ListingOptions UseVerboseMessages="TRUE" GenerateLinkSummary="FALSE" GenerateMapFile="TRUE">
+				</ListingOptions>
+			</Linker>
+			<Exporter ChecksumAllCode="TRUE" AutomaticBootID="TRUE">
+				<BootID>0x5F6E</BootID>
+				<RebootConfiguration ChecksumError="FALSE" FatalApplicationError="FALSE" Always="FALSE">
+				</RebootConfiguration>
+				<RebootApplication ApplessIsFatal="FALSE" FatalApplicationError="FALSE" Always="FALSE" RebootEEVars="FALSE">
+				</RebootApplication>
+				<RebootCommParameters ChecksumError="FALSE" TypeRateMismatch="FALSE" Always="FALSE">
+				</RebootCommParameters>
+			</Exporter>
+			<TargetConfiguration ExportConfigured="FALSE" CloneDomain="FALSE" NoDomain="FALSE" DomainID="00" AuthenticationKey="000000000000" Location="" UseAuthentication="FALSE">
+				<SubnetID>0x1</SubnetID>
+				<NodeID>0x1</NodeID>
+				<NonGrpRcvTimer>0x6</NonGrpRcvTimer>
+			</TargetConfiguration>
+		</TargetDevice>
+	</TargetDevices>
+	<LibraryItems>
+	</LibraryItems>
+	<SourceFileList>
+		<SourceFileName Name="cover.h">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="NodeObject.nc">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="NodeObject.h">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="common.h">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="common.nc">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="Filesys.h">
+			<OptionFlags>0xC</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="usart.nc">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="macros.h">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+		<SourceFileName Name="iec103.h">
+			<OptionFlags>0x4</OptionFlags>
+		</SourceFileName>
+	</SourceFileList>
+	<Interface>
+		<Dependencies>
+			<BIF>0xB35E</BIF>
+			<BF2>0x0</BF2>
+			<XF2>0x0</XF2>
+			<XF3>0x0</XF3>
+			<DRF>0x76C61E72</DRF>
+		</Dependencies>
+	</Interface>
+	<DeviceTemplatePackage NamedFblocks="TRUE" UseFTPCPMode="FALSE" UseExternalNames="TRUE">
+		<Contents MajorVersion="0" MinorVersion="0" CreationDate="1380159041" Format="3" Content="1">
+			<FileDescription>NodeBuilder Device Packaging File</FileDescription>
+			<UpgradeStatus>0</UpgradeStatus>
+		</Contents>
+		<Name>cover</Name>
+		<Description></Description>
+		<ProgramID>9000004600040407</ProgramID>
+		<TemplateVersion>3</TemplateVersion>
+		<FBlocks>
+			<FBlock ArrayElementCount="0" Embedded="TRUE" Name="NodeObject">
+				<SourceFileName>NodeObject.h</SourceFileName>
+				<XMLFileName></XMLFileName>
+				<FBlockData Format="1" Content="1">
+					<Name>NodeObject</Name>
+					<Description></Description>
+					<SourceFileName></SourceFileName>
+					<FPTName>SFPTnodeObject</FPTName>
+					<FPTScope>0</FPTScope>
+					<FPTIndex>0</FPTIndex>
+					<NVs>
+						<NV ArrayElementCount="0" Name="nviRequest" Output="FALSE" Sync="FALSE" Polled="FALSE" FPTMemberNumber="1" MfgSpecific="FALSE" Required="TRUE" ChangeableType="FALSE" AckdService="FALSE" UnackdService="FALSE" RepeatedService="FALSE" SNVT_xxx="FALSE" EEPROM="FALSE" Const="FALSE" Far="FALSE" Uninit="FALSE" Onchip="FALSE" Offchip="FALSE">
+							<Description></Description>
+							<Type>SNVT_obj_request</Type>
+							<FPTMemberName>nviRequest</FPTMemberName>
+							<InitialValue></InitialValue>
+							<BindInfo></BindInfo>
+							<MaxValue></MaxValue>
+							<MinValue></MinValue>
+							<FbScope>0</FbScope>
+						</NV>
+						<NV ArrayElementCount="0" Name="nvoStatus" Output="TRUE" Sync="TRUE" Polled="FALSE" FPTMemberNumber="2" MfgSpecific="FALSE" Required="TRUE" ChangeableType="FALSE" AckdService="FALSE" UnackdService="FALSE" RepeatedService="FALSE" SNVT_xxx="FALSE" EEPROM="FALSE" Const="FALSE" Far="FALSE" Uninit="FALSE" Onchip="FALSE" Offchip="FALSE">
+							<Description></Description>
+							<Type>SNVT_obj_status</Type>
+							<FPTMemberName>nvoStatus</FPTMemberName>
+							<InitialValue></InitialValue>
+							<BindInfo></BindInfo>
+							<MaxValue></MaxValue>
+							<MinValue></MinValue>
+							<FbScope>0</FbScope>
+						</NV>
+					</NVs>
+					<CPs>
+					</CPs>
+					<SharedCPs>
+					</SharedCPs>
+				</FBlockData>
+			</FBlock>
+		</FBlocks>
+		<DeviceNVs>
+		</DeviceNVs>
+		<DeviceCPs>
+		</DeviceCPs>
+	</DeviceTemplatePackage>
+</NBDeviceTemplate>
