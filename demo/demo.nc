@@ -188,23 +188,33 @@ network output SNVT_time_stamp nvoLastTiming;
 
 network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverControl;
-network input SNVT_angle_f nviAngle;
-network input SNVT_press_f nviHit;
-network input SNVT_switch nviLocked;
-network input SNVT_switch nviTiltAlarm;
-network input SNVT_switch nviActive;
 
-network input SNVT_date_time nviUpdateOn;
+network input SNVT_angle_f nviTiltValue;
 network input SNVT_count nviTiltCount;
+network input SNVT_switch nviTiltAlarm;
+
+network input SNVT_press_f nviHitValue;
 network input SNVT_count nviHitCount;
-network input SNVT_count nviOpenCount;
 
-uint8_t _tilt_count;
-uint8_t _hit_count;
-uint8_t _open_count;
+network input SNVT_switch nviLocked;
+network input SNVT_count nviUnlockedCount;
 
-float_type _tilt_value;
-float_type _hit_value;
+network input SNVT_switch nviActive;
+network input SNVT_date_time nviUpdateOn;
+
+
+typedef struct {
+    uint8_t tilt_count;
+    uint8_t hit_count;
+    uint8_t open_count;
+
+    float_type tilt_value;
+    float_type hit_value;
+
+    SNVT_count *address;
+} Cover;
+
+far Cover _cover;
 
 void onRequest6804(void);
 void onRequest6803(void);
@@ -227,6 +237,8 @@ when (reset) {
 
     usart_init();
     package_received = 0;
+
+    _cover.address = &nviAddressRs485;
 }
 
 when (usart_available()) {
@@ -253,7 +265,7 @@ when (usart_available()) {
 	}
 
 	if (cs_calc == cs_recv &&
-			(address_recv == (uint8_t) nviAddressRs485 || address_recv == 0 || address_recv == 255)) {
+			(address_recv == (uint8_t) *_cover.address || address_recv == 0 || address_recv == 255)) {
         init(&package_rx, cache_rx, len);
 		package_received = 1;
 	}
@@ -280,17 +292,17 @@ when (package_received) {
         onRequest6804();
         break;
     case 0x0b:
-        initFrame68(&package_tx, 0x08, (uint8_t)nviAddressRs485);
+        initFrame68(&package_tx, 0x08, (uint8_t) *_cover.address);
 
-        if (_hit_count ==0 && _tilt_count == 0 && _open_count == 0) {
+        if (_cover.hit_count ==0 && _cover.tilt_count == 0 && _cover.open_count == 0) {
             appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
             appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
-            appendFrame68Reverse(&package_tx, (uint8_t *)&nviAngle, 4);
+            appendFrame68Reverse(&package_tx, (uint8_t *)&nviTiltValue, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[1], 2);
-            appendFrame68Reverse(&package_tx, (uint8_t *)&nviHit, 4);
+            appendFrame68Reverse(&package_tx, (uint8_t *)&nviHitValue, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
             status = 0;
-            status |= _hit_count? 0x01: 0x00;
+            status |= _cover.hit_count? 0x01: 0x00;
             status |= nviTiltAlarm.state == 1? 0x02:0x00;
             status |= nviLocked.state == 1? 0x04:0x00;
             appendByteToFrame68(&package_tx, status);
@@ -299,32 +311,32 @@ when (package_received) {
             appendByteToFrame68(&package_tx, 0x00);
         } else {
             appendFrame68(&package_tx, ASDU_HEAD_6808, 7);
-            if (_hit_count) {
+            if (_cover.hit_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[0], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_hit_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&_hit_value, 4);
+                appendByteToFrame68(&package_tx, (uint8_t)_cover.hit_count);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&_cover.hit_value, 4);
                 package_tx.buff[7]++;
             }
 
-            if (_tilt_count) {
+            if (_cover.tilt_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[1], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_tilt_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&_tilt_value, 4);
+                appendByteToFrame68(&package_tx, (uint8_t)_cover.tilt_count);
+                appendFrame68Reverse(&package_tx, (uint8_t *)&_cover.tilt_value, 4);
                 package_tx.buff[7]++;
             }
 
-            if (_open_count) {
+            if (_cover.open_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[2], 2);
                 appendByteToFrame68(&package_tx, nviUpdateOn.second);
                 appendByteToFrame68(&package_tx, nviUpdateOn.minute);
                 appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_open_count);
+                appendByteToFrame68(&package_tx, (uint8_t)_cover.open_count);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
@@ -332,12 +344,12 @@ when (package_received) {
                 package_tx.buff[7]++;
             }
 
-            _open_count = 0;
-            _tilt_count = 0;
-            _hit_count = 0;
-            
-            _hit_value = fl_zero;
-            _tilt_value = fl_zero;
+            _cover.open_count = 0;
+            _cover.tilt_count = 0;
+            _cover.hit_count = 0;
+
+            _cover.hit_value = fl_zero;
+            _cover.tilt_value = fl_zero;
         }
 
         completeFrame68(&package_tx);
@@ -352,23 +364,23 @@ when (package_received) {
 }
 
 when (nv_update_occurs(nviUpdateOn)) {
-    if (_tilt_count == 0 && nviTiltCount > 0)
-        _tilt_count = 1;
+    if (_cover.tilt_count == 0 && nviTiltCount > 0)
+        _cover.tilt_count = 1;
 
-    _tilt_count += (uint8_t)(nviTiltCount < 2 ? 0: (nviTiltCount - 1));
+    _cover.tilt_count += (uint8_t)(nviTiltCount < 2 ? 0: (nviTiltCount - 1));
 
-    if (_hit_count == 0 && nviHitCount > 0)
-        _hit_count = 0;
+    if (_cover.hit_count == 0 && nviHitCount > 0)
+        _cover.hit_count = 0;
 
-    _hit_count += (uint8_t)(nviHitCount < 2 ? 0: (nviHitCount - 1));
+    _cover.hit_count += (uint8_t)(nviHitCount < 2 ? 0: (nviHitCount - 1));
 
-    if (_open_count == 0 && nviOpenCount > 0)
-        _open_count = 1;
+    if (_cover.open_count == 0 && nviUnlockedCount > 0)
+        _cover.open_count = 1;
 
-    _open_count += (uint8_t)(nviOpenCount < 2 ? 0: (nviOpenCount - 1));
+    _cover.open_count += (uint8_t)(nviUnlockedCount < 2 ? 0: (nviUnlockedCount - 1));
 
-	fl_max(&_tilt_value, &nviAngle, &_tilt_value);
-	fl_max(&_hit_value, &nviHit, &_hit_value);
+	fl_max(&_cover.tilt_value, &nviTiltValue, &_cover.tilt_value);
+	fl_max(&_cover.hit_value, &nviHitValue, &_cover.hit_value);
 }
 
 void onRequest6803() {
@@ -377,7 +389,7 @@ void onRequest6803() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        setFrame10(&package_tx, 0x28, (uint8_t)nviAddressRs485);
+        setFrame10(&package_tx, 0x28, (uint8_t) *_cover.address);
         break;
     }
 }
