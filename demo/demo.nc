@@ -174,6 +174,8 @@
 #include "iec103.h"
 #include <float.h>
 
+//#pragma relaxed_casting_on
+
 //IO_2 output bit beeper;
 //stimer repeating tim;
 
@@ -202,7 +204,6 @@ network input SNVT_count nviUnlockedCount;
 network input SNVT_switch nviActive;
 network input SNVT_date_time nviUpdateOn;
 
-
 typedef struct {
     uint8_t tilt_count;
     uint8_t hit_count;
@@ -211,7 +212,21 @@ typedef struct {
     float_type tilt_value;
     float_type hit_value;
 
-    SNVT_count *address;
+    SNVT_count *inAddressRs485;
+//    SNVT_switch *outCoverControl;
+
+    SNVT_angle_f *inTiltValue;
+    SNVT_count *inTiltCount;
+    SNVT_switch *inTiltAlarm;
+
+    SNVT_press_f *inHitValue;
+    SNVT_count *inHitCount;
+
+    SNVT_switch *inLocked;
+    SNVT_count *inUnlockedCount;
+
+    SNVT_switch *inActive;
+    SNVT_date_time *inUpdateOn;
 } Cover;
 
 far Cover _cover;
@@ -238,7 +253,21 @@ when (reset) {
     usart_init();
     package_received = 0;
 
-    _cover.address = &nviAddressRs485;
+    _cover.inAddressRs485 = &nviAddressRs485;
+
+//    _cover.outCoverControl = &nvoCoverControl;
+    _cover.inTiltValue = &nviTiltValue;
+    _cover.inTiltCount = &nviTiltCount;
+    _cover.inTiltAlarm = &nviTiltAlarm;
+
+    _cover.inHitValue = &nviHitValue;
+    _cover.inHitCount = &nviHitCount;
+
+    _cover.inLocked = &nviLocked;
+    _cover.inUnlockedCount = &nviUnlockedCount;
+
+    _cover.inActive = &nviActive;
+    _cover.inUpdateOn = &nviUpdateOn;
 }
 
 when (usart_available()) {
@@ -265,7 +294,7 @@ when (usart_available()) {
 	}
 
 	if (cs_calc == cs_recv &&
-			(address_recv == (uint8_t) *_cover.address || address_recv == 0 || address_recv == 255)) {
+			(address_recv == (uint8_t) *_cover.inAddressRs485 || address_recv == 0 || address_recv == 255)) {
         init(&package_rx, cache_rx, len);
 		package_received = 1;
 	}
@@ -292,7 +321,7 @@ when (package_received) {
         onRequest6804();
         break;
     case 0x0b:
-        initFrame68(&package_tx, 0x08, (uint8_t) *_cover.address);
+        initFrame68(&package_tx, 0x08, (uint8_t) *_cover.inAddressRs485);
 
         if (_cover.hit_count ==0 && _cover.tilt_count == 0 && _cover.open_count == 0) {
             appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
@@ -389,7 +418,7 @@ void onRequest6803() {
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        setFrame10(&package_tx, 0x28, (uint8_t) *_cover.address);
+        setFrame10(&package_tx, 0x28, (uint8_t) *_cover.inAddressRs485);
         break;
     }
 }
