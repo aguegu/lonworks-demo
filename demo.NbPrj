@@ -13,6 +13,9 @@
 		<DeviceTemplateFileName Name="cover\cover.NbDt">
 			<OptionFlags>0x0</OptionFlags>
 		</DeviceTemplateFileName>
+		<DeviceTemplateFileName Name="lon_cover\lon_cover.NbDt">
+			<OptionFlags>0x0</OptionFlags>
+		</DeviceTemplateFileName>
 	</DeviceTemplateFileNames>
 	<HardwareTemplateFileNames>
 	</HardwareTemplateFileNames>
