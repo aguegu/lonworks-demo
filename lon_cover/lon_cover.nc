@@ -183,15 +183,15 @@
 
 #include <float.h>
 #include <io_types.h>
+#include "iec103.h"
 
-//#pragma specify_io_clock "10 MHz"
-
-//IO_8 sci baud(SCI_9600) iosci;
-
-IO_8 input serial baud(2400) IOcharIn; // serial input device
-IO_10 output serial baud(2400) IOcharOut;
+IO_8 input serial baud(4800) IOcharIn; // serial input device
+IO_10 output serial baud(4800) IOcharOut;
 
 stimer repeating tim;
+
+far Record package_tx;
+network input SNVT_count nviAddressRs485 = 8;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -209,10 +209,14 @@ when (reset) {
     tim = 2;
 }
 
+void inquire() {
+    setFrame10(&package_tx, 0x5b, (uint8_t)nviAddressRs485);
+    io_out(IOcharOut, package_tx.buff, package_tx.length);
+    clear(&package_tx);
+}
+
 when (timer_expires(tim)) {
-    static uint8_t state = 0x00;
-    io_out(IOcharOut, &state, 1);
-    state++;
+    inquire();
 }
 
 //
