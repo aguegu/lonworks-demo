@@ -174,12 +174,7 @@
 #include "iec103.h"
 #include <float.h>
 
-//#pragma relaxed_casting_on
-
-//IO_2 output bit beeper;
-//stimer repeating tim;
-
-far uint8_t cache_rx[256];
+far uint8_t cache_rx[BUFF_SIZE];
 
 far Record package_rx;
 far Record package_tx;
@@ -188,8 +183,8 @@ uint8_t package_received;
 
 network output SNVT_time_stamp nvoLastTiming;
 
-network input SNVT_count nviAddressRs485 = 1;
 network output SNVT_switch nvoCoverControl;
+network input SNVT_count nviAddressRs485 = 1;
 
 network input SNVT_angle_f nviTiltValue;
 network input SNVT_count nviTiltCount;
