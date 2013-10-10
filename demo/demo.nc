@@ -328,6 +328,8 @@ void handlePackage(uint8_t index) {
     p = _cover + index;
     if ((*p->inActive).state == 0) return;
 
+    watchdog_update();
+
     switch (getFunctionCode(&package_rx)) {
     case 0x03:
         onRequest6803((uint8_t) *p->inAddressRs485);
