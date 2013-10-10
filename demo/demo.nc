@@ -181,9 +181,6 @@ far uint8_t cache_rx[BUFF_SIZE];
 far Record package_rx;
 far Record package_tx;
 
-far uint8_t package_received;
-far uint8_t package_index;
-
 network output SNVT_time_stamp nvoLastTiming;
 
 network output SNVT_switch nvoCoverControl[COVER_COUNT];
@@ -232,6 +229,7 @@ far Cover _cover[COVER_COUNT];
 void onRequest6804(void);
 void onRequest6803(uint8_t address);
 void refresh(uint8_t);
+void handlePackage(uint8_t index);
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -271,7 +269,6 @@ when (reset) {
 
     usart_init();
     initCover();
-    package_received = 0;
 }
 
 when (usart_available()) {
@@ -302,8 +299,7 @@ when (usart_available()) {
         for ( i = 0; i < COVER_COUNT; i++) {
             if (address_recv == (uint8_t) (*_cover[i].inAddressRs485)) {
                 init(&package_rx, cache_rx, len);
-                package_received = 1;
-                package_index = i;
+                handlePackage(i);
                 break;
             }
         }
@@ -317,14 +313,13 @@ far const uint8_t ASDU_HEAD_6808[7] = {0x29, 0x80, 0x00, 0x00, 0x0c, 0x01, 0x01}
 far const uint8_t ARGUMENT_INDEX[3][2] = {{0x01, 0x08}, {0x01, 0x09}, {0x01, 0x01}};
 far const uint8_t EVENT_INDEX[3][2] = {{0x01, 0x06}, {0x02, 0x06}, {0x03, 0x06}};
 
-when (package_received) {
+void handlePackage(uint8_t index) {
     uint8_t status;
     Cover * p;
-    package_received = 0;
 
-    if (package_index >= COVER_COUNT) return;
+    if (index >= COVER_COUNT) return;
 
-    p = _cover + package_index;
+    p = _cover + index;
     if ((*p->inActive).state == 0) return;
 
     switch (getFunctionCode(&package_rx)) {
@@ -402,7 +397,7 @@ when (package_received) {
     usart_writeBytes(package_tx.buff, package_tx.length);
     usart_flush();
 
-    refresh(package_index);
+    refresh(index);
     clear(&package_tx);
 }
 
