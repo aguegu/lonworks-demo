@@ -174,7 +174,7 @@
 #include "iec103.h"
 #include <float.h>
 
-#define COVER_COUNT 4
+#define COVER_COUNT 8
 
 far uint8_t cache_rx[BUFF_SIZE];
 

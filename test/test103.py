@@ -17,7 +17,7 @@ class SimplesticTest(unittest.TestCase):
 		sp.parity = serial.PARITY_NONE
 		sp.timeout = 0.07
 
-		self.node = Node(sp, 0x01)
+		self.node = Node(sp, 0x08)
 		self.node.open()
 		self.event_names = {1: "hit", 2: "tilt", 3: "open"}
 
