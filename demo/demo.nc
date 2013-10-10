@@ -230,8 +230,8 @@ typedef struct {
 far Cover _cover[COVER_COUNT];
 
 void onRequest6804(void);
-void onRequest6803(void);
-void refresh(void);
+void onRequest6803(uint8_t address);
+void refresh(uint8_t);
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -270,12 +270,14 @@ when (reset) {
     executeOnEachFblock(0, FBC_WHEN_RESET);
 
     usart_init();
+    initCover();
     package_received = 0;
 }
 
 when (usart_available()) {
 	uint8_t cs_calc, cs_recv, i, len, address_recv;
 	len = 0;
+    address_recv = 0;
 
 	cache_rx[4] = (uint8_t)usart_read();
 	if (cache_rx[0] == 0x10 && cache_rx[4] == 0x16) {
@@ -297,9 +299,8 @@ when (usart_available()) {
 	}
 
 	if (cs_calc == cs_recv && address_recv != 0) {
-
         for ( i = 0; i < COVER_COUNT; i++) {
-            if (address_recv == (uint8_t) *_cover[i].inAddressRs485) {
+            if (address_recv == (uint8_t) (*_cover[i].inAddressRs485)) {
                 init(&package_rx, cache_rx, len);
                 package_received = 1;
                 package_index = i;
@@ -321,7 +322,6 @@ when (package_received) {
     Cover * p;
     package_received = 0;
 
-    if (package_index == 0) return;
     if (package_index >= COVER_COUNT) return;
 
     p = _cover + package_index;
@@ -329,7 +329,7 @@ when (package_received) {
 
     switch (getFunctionCode(&package_rx)) {
     case 0x03:
-        onRequest6803();
+        onRequest6803((uint8_t) *p->inAddressRs485);
         break;
     case 0x04:
         onRequest6804();
@@ -402,7 +402,7 @@ when (package_received) {
     usart_writeBytes(package_tx.buff, package_tx.length);
     usart_flush();
 
-    refresh();
+    refresh(package_index);
     clear(&package_tx);
 }
 
@@ -429,14 +429,14 @@ when (nv_update_occurs(nviUpdateOn)) {
 	fl_max(&p->tilt_value, p->inTiltValue, &p->tilt_value);
 	fl_max(&p->hit_value, p->inHitValue, &p->hit_value);
 }
-/*
-void onRequest6803() {
+
+void onRequest6803(uint8_t address) {
     switch (getAsduHead(&package_rx)->typ) {
     case 0X07 :
     case 0X0A :
     case 0X15 :
     case 0x40 :
-        setFrame10(&package_tx, 0x28, (uint8_t) *_cover.inAddressRs485);
+        setFrame10(&package_tx, 0x28, address);
         break;
     }
 }
@@ -452,19 +452,19 @@ void onRequest6804() {
     nvoLastTiming.year = (p[6] & 0x7f) + 0x780;
 }
 
-void refresh() {
+void refresh(uint8_t index) {
     if (getFunctionCode(&package_rx) == 0x03 && getAsduHead(&package_rx)->typ == 0x40) {
         switch (getAsduHead(&package_rx)->inf) {
         case 0x70:  // open
-            nvoCoverControl.state = 1;
+            nvoCoverControl[index].state = 1;
             break;
         case 0x71:  // close
-            nvoCoverControl.state = 0;
+            nvoCoverControl[index].state = 0;
             break;
         }
     }
 }
-*/
+
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
