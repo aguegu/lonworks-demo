@@ -211,6 +211,8 @@ network output SNVT_count nvoUnlockedCount;
 network output SNVT_switch nvoActive;
 network output SNVT_date_time nvoUpdateOn;
 
+void handlePackage(void);
+
 //
 // when(reset) executes when the device is reset. Make sure to keep
 // your when(reset) task short, as a pending state change can not be
@@ -239,6 +241,8 @@ void inquire() {
         if (package_rx.buff[0] != 0x68 || package_rx.buff[3] != 0x68) break;
         if (package_rx.buff[1] != package_rx.buff[2]) break;
 
+        package_rx.length = length;
+
         length = io_in(IOcharIn, package_rx.buff + 4, package_rx.buff[1] + 2);
         if (length != package_rx.buff[1] + 2) break;
         if (package_rx.buff[package_rx.buff[1] + 5] != 0x16) break;
@@ -250,8 +254,11 @@ void inquire() {
 
         if (cs_calc != cs_recv) break;
 
+        package_rx.length += length;
+
         nvoActive.state = 1;
 
+        handlePackage();
         return;
 
     } while (FALSE);
@@ -305,6 +312,82 @@ when (nv_update_occurs(nviLastTiming)){
 
 when (timer_expires(tim)) {
     inquire();
+}
+
+void getReversedS32(s32_type *s, uint8_t *p) {
+    s->bytes[3] = p[0];
+    s->bytes[2] = p[1];
+    s->bytes[1] = p[2];
+    s->bytes[0] = p[3];
+}
+
+void handlePackage() {
+    s32_type s;
+    uint8_t i;
+    static uint8_t has_event;
+    boolean got_hit, got_tilt, got_open;
+    nvoActive.state = 1;
+
+    switch (package_rx.buff[1]) {
+    case 0x1a:
+        has_event = 0;
+        getReversedS32(&s, package_rx.buff + 14);
+        nvoTiltValue = *(SNVT_angle_f *)(&s);
+
+        getReversedS32(&s, package_rx.buff + 20);
+        nvoHitValue = *(SNVT_press_f *)(&s);
+
+        nvoTiltAlarm.state = package_rx.buff[26] & 0x02 ? 1 : 0;
+        nvoLocked.state = package_rx.buff[26] & 0x04 ? 1 : 0;
+
+        break;
+    case 0x13:
+    case 0x1d:
+    case 0x27:
+        has_event = 1;
+
+        got_hit = FALSE;
+        got_tilt = FALSE;
+        got_open = FALSE;
+
+        i = 13;
+        while (i + 10 < package_rx.length) {
+            switch (package_rx.buff[i]) {
+                case 0x01:
+                    nvoHitCount = package_rx.buff[i + 5];
+                    getReversedS32(&s, package_rx.buff + i + 6);
+                    nvoHitValue = *(SNVT_press_f *)(&s);
+                    got_hit = TRUE;
+                    break;
+                case 0x02:
+                    nvoTiltCount = package_rx.buff[i + 5];
+                    getReversedS32(&s, package_rx.buff + i + 6);
+                    nvoTiltValue = *(SNVT_angle_f *)(&s);
+                    got_tilt = TRUE;
+                    break;
+                case 0x03:
+                    nvoUnlockedCount = package_rx.buff[i + 5];
+                    nvoLocked.state = 0;
+                    got_open = TRUE;
+                    break;
+            }
+            i += 10;
+        }
+
+        if (!got_hit) nvoHitCount = 0;
+        if (!got_tilt) nvoTiltCount = 0;
+        if (!got_open) nvoUnlockedCount = 0;
+
+        nvoUpdateOn.second = package_rx.buff[15];
+        nvoUpdateOn.minute = package_rx.buff[16];
+        nvoUpdateOn.hour = package_rx.buff[17];
+
+        break;
+    }
+
+    if (has_event) {
+        inquire();
+    }
 }
 
 //

@@ -20,11 +20,6 @@ typedef  struct {
 	uint8_t inf;
 } AsduHead;
 
-void init(Record *p, void * cache, uint8_t length) {
-	memcpy(p->buff, cache, length);
-	p->length = length;
-}
-
 void setFrame10(Record *p, uint8_t control, uint8_t address) {
 	p->buff[0] = 0x10;
 	p->buff[1] = control;
@@ -52,12 +47,6 @@ void appendFrame68(Record *p, const void * buff, uint8_t len) {
 	p->length += len;
 }
 
-void appendFrame68Reverse(Record *p, const uint8_t * buff, uint8_t len) {
-	while (len) {
-		*(p->buff + p->length++) = (uint8_t)(*(buff+(--len)));
-	}
-}
-
 void completeFrame68(Record *p) {
 	uint8_t i, sum;
 	for (i=4, sum=0; i < p->length; i++)
@@ -70,26 +59,9 @@ void completeFrame68(Record *p) {
 	p->buff[1] = p->buff[2] = p->length - 6;
 }
 
-uint8_t getFunctionCode(Record *p) {
-   uint8_t func;
-
-	if (p->buff[0] == 0x68)
-		func = *(p->buff + 4) & 0x0f;
-	else if (p->buff[0] == 0x10)
-		func = *(p->buff + 1) & 0x0f;
-	else
-		func = 0;
-
-	return func;
-}
-
 void clear(Record *p) {
     p->length = 0;
     memset(p->buff, 0, BUFF_SIZE);
-}
-
-AsduHead * getAsduHead(Record *p) {
-	return (AsduHead *) (p->buff + 6);
 }
 
 #endif

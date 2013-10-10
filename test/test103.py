@@ -13,11 +13,11 @@ class SimplesticTest(unittest.TestCase):
 	def setUp(self):
 		sp = serial.Serial();
 		sp.port = '/dev/ttyUSB0'
-		sp.baudrate = 4800
+		sp.baudrate = 9600
 		sp.parity = serial.PARITY_NONE
 		sp.timeout = 0.07
 
-		self.node = Node(sp, 0x01)
+		self.node = Node(sp, 0x08)
 		self.node.open()
 		self.event_names = {1: "hit", 2: "tilt", 3: "open"}
 
