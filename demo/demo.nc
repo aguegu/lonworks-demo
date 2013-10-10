@@ -313,6 +313,12 @@ far const uint8_t ASDU_HEAD_6808[7] = {0x29, 0x80, 0x00, 0x00, 0x0c, 0x01, 0x01}
 far const uint8_t ARGUMENT_INDEX[3][2] = {{0x01, 0x08}, {0x01, 0x09}, {0x01, 0x01}};
 far const uint8_t EVENT_INDEX[3][2] = {{0x01, 0x06}, {0x02, 0x06}, {0x03, 0x06}};
 
+void appendUpdateTime(Cover *p) {
+    appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
+    appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
+    appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+}
+
 void handlePackage(uint8_t index) {
     uint8_t status;
     Cover * p;
@@ -351,9 +357,7 @@ void handlePackage(uint8_t index) {
             appendFrame68(&package_tx, ASDU_HEAD_6808, 7);
             if (p->hit_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[0], 2);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendUpdateTime(p);
                 appendByteToFrame68(&package_tx, p->hit_count);
                 appendFrame68Reverse(&package_tx, (uint8_t *)(&(p->hit_value)), 4);
                 package_tx.buff[7]++;
@@ -361,9 +365,7 @@ void handlePackage(uint8_t index) {
 
             if (p->tilt_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[1], 2);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendUpdateTime(p);
                 appendByteToFrame68(&package_tx, p->tilt_count);
                 appendFrame68Reverse(&package_tx, (uint8_t *)(&(p->tilt_value)), 4);
                 package_tx.buff[7]++;
@@ -371,9 +373,7 @@ void handlePackage(uint8_t index) {
 
             if (p->open_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[2], 2);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
-                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendUpdateTime(p);
                 appendByteToFrame68(&package_tx, p->open_count);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
