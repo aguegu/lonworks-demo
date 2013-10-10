@@ -191,7 +191,25 @@ IO_10 output serial baud(4800) IOcharOut;
 stimer repeating tim;
 
 far Record package_tx;
+far Record package_rx;
+
+network input SNVT_time_stamp nviLastTiming;
+
 network input SNVT_count nviAddressRs485 = 8;
+network input SNVT_switch nviCoverControl;
+
+network output SNVT_angle_f nvoTiltValue;
+network output SNVT_count nvoTiltCount;
+network output SNVT_switch nvoTiltAlarm;
+
+network output SNVT_press_f nvoHitValue;
+network output SNVT_count nvoHitCount;
+
+network output SNVT_switch nvoLocked;
+network output SNVT_count nvoUnlockedCount;
+
+network output SNVT_switch nvoActive;
+network output SNVT_date_time nvoUpdateOn;
 
 //
 // when(reset) executes when the device is reset. Make sure to keep
@@ -210,9 +228,79 @@ when (reset) {
 }
 
 void inquire() {
+    uint8_t length, cs_recv, cs_calc, i;
     setFrame10(&package_tx, 0x5b, (uint8_t)nviAddressRs485);
     io_out(IOcharOut, package_tx.buff, package_tx.length);
     clear(&package_tx);
+
+    do {
+        length = io_in(IOcharIn, package_rx.buff, 4);
+        if (length != 4) break;
+        if (package_rx.buff[0] != 0x68 || package_rx.buff[3] != 0x68) break;
+        if (package_rx.buff[1] != package_rx.buff[2]) break;
+
+        length = io_in(IOcharIn, package_rx.buff + 4, package_rx.buff[1] + 2);
+        if (length != package_rx.buff[1] + 2) break;
+        if (package_rx.buff[package_rx.buff[1] + 5] != 0x16) break;
+        if (package_rx.buff[5] != (uint8_t)nviAddressRs485) break;
+
+        for (cs_calc = 0, i = 0; i < package_rx.buff[1]; i++)
+            cs_calc += *(package_rx.buff + 4 + i);
+        cs_recv = package_rx.buff[package_rx.buff[1]+4];
+
+        if (cs_calc != cs_recv) break;
+
+        nvoActive.state = 1;
+
+        return;
+
+    } while (FALSE);
+
+    nvoActive.state = 0;
+}
+
+far const uint8_t ASDU_HEAD_6804[6] = {0x06, 0x81, 0x08, 0xff, 0xff, 0x00};
+far const uint8_t ASDU_HEAD_OPEN[8] = {0x40, 0x05, 0x0c, 0x01, 0x12, 0x70, 0x00, 0x00};
+far const uint8_t ASDU_HEAD_CLOSE[8] = {0x40, 0x05, 0x0c, 0x01, 0x12, 0x71, 0x00, 0x00};
+
+when (nv_update_occurs(nviCoverControl)) {
+	uint8_t length;
+    tim = 0;
+
+    initFrame68(&package_tx, 0x53, (uint8_t)nviAddressRs485);
+
+    if (nviCoverControl.state)
+        appendFrame68(&package_tx, ASDU_HEAD_OPEN, 8);
+    else
+        appendFrame68(&package_tx, ASDU_HEAD_CLOSE, 8);
+
+    completeFrame68(&package_tx);
+    io_out(IOcharOut, package_tx.buff, package_tx.length);
+
+    length = io_in(IOcharIn, package_rx.buff, 5);
+
+    if (length < 5)
+        nvoActive.state = 0;
+
+    tim = 2;
+}
+
+when (nv_update_occurs(nviLastTiming)){
+    tim = 0;
+
+    initFrame68(&package_tx, 0x44, (uint8_t)nviAddressRs485);
+    appendFrame68(&package_tx, ASDU_HEAD_6804, 6);
+    appendByteToFrame68(&package_tx, (uint8_t)((nviLastTiming.second * 1000) & 0xff));
+    appendByteToFrame68(&package_tx, (uint8_t)((nviLastTiming.second * 1000) >> 8));
+    appendByteToFrame68(&package_tx, (uint8_t)nviLastTiming.minute);
+    appendByteToFrame68(&package_tx, (uint8_t)nviLastTiming.hour);
+    appendByteToFrame68(&package_tx, (uint8_t)nviLastTiming.day);
+    appendByteToFrame68(&package_tx, (uint8_t)nviLastTiming.month);
+    appendByteToFrame68(&package_tx, (uint8_t)nviLastTiming.year & 0x7f);
+    completeFrame68(&package_tx);
+
+    io_out(IOcharOut, package_tx.buff, package_tx.length);
+    tim = 2;
 }
 
 when (timer_expires(tim)) {
