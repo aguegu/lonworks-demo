@@ -174,30 +174,34 @@
 #include "iec103.h"
 #include <float.h>
 
+#define COVER_COUNT 4
+
 far uint8_t cache_rx[BUFF_SIZE];
 
 far Record package_rx;
 far Record package_tx;
 
-uint8_t package_received;
+far uint8_t package_received;
+far uint8_t package_index;
 
 network output SNVT_time_stamp nvoLastTiming;
 
-network output SNVT_switch nvoCoverControl;
-network input SNVT_count nviAddressRs485 = 1;
+network output SNVT_switch nvoCoverControl[COVER_COUNT];
 
-network input SNVT_angle_f nviTiltValue;
-network input SNVT_count nviTiltCount;
-network input SNVT_switch nviTiltAlarm;
+network input SNVT_count nviAddressRs485[COVER_COUNT];
 
-network input SNVT_press_f nviHitValue;
-network input SNVT_count nviHitCount;
+network input SNVT_angle_f nviTiltValue[COVER_COUNT];
+network input SNVT_count nviTiltCount[COVER_COUNT];
+network input SNVT_switch nviTiltAlarm[COVER_COUNT];
 
-network input SNVT_switch nviLocked;
-network input SNVT_count nviUnlockedCount;
+network input SNVT_press_f nviHitValue[COVER_COUNT];
+network input SNVT_count nviHitCount[COVER_COUNT];
 
-network input SNVT_switch nviActive;
-network input SNVT_date_time nviUpdateOn;
+network input SNVT_switch nviLocked[COVER_COUNT];
+network input SNVT_count nviUnlockedCount[COVER_COUNT];
+
+network input SNVT_switch nviActive[COVER_COUNT];
+network input SNVT_date_time nviUpdateOn[COVER_COUNT];
 
 typedef struct {
     uint8_t tilt_count;
@@ -208,7 +212,6 @@ typedef struct {
     float_type hit_value;
 
     SNVT_count *inAddressRs485;
-//    SNVT_switch *outCoverControl;
 
     SNVT_angle_f *inTiltValue;
     SNVT_count *inTiltCount;
@@ -224,7 +227,7 @@ typedef struct {
     SNVT_date_time *inUpdateOn;
 } Cover;
 
-far Cover _cover;
+far Cover _cover[COVER_COUNT];
 
 void onRequest6804(void);
 void onRequest6803(void);
@@ -239,30 +242,35 @@ void refresh(void);
 // time-consuming director implementations may require additional caution
 // in this regard.
 //
-when (reset) {
-   initAllFblockData(TOTAL_FBLOCK_COUNT);
-    executeOnEachFblock(0, FBC_WHEN_RESET);
 
-    nvoCoverControl.state = FALSE;
+void initCover() {
+    uint8_t i;
+
+    for (i = 0; i < COVER_COUNT; i++) {
+        _cover[i].inAddressRs485 = nviAddressRs485 + i;
+        _cover[i].inTiltValue = nviTiltValue + i;
+        _cover[i].inTiltCount = nviTiltCount + i;
+        _cover[i].inTiltAlarm = nviTiltAlarm + i;
+
+        _cover[i].inHitValue = nviHitValue + i;
+        _cover[i].inHitCount = nviHitCount + i;
+
+        _cover[i].inLocked = nviLocked + i;
+        _cover[i].inUnlockedCount = nviUnlockedCount + i;
+
+        _cover[i].inActive = nviActive + i;
+        _cover[i].inUpdateOn = nviUpdateOn + i;
+
+        nvoCoverControl[i].state = FALSE;
+    }
+}
+
+when (reset) {
+    initAllFblockData(TOTAL_FBLOCK_COUNT);
+    executeOnEachFblock(0, FBC_WHEN_RESET);
 
     usart_init();
     package_received = 0;
-
-    _cover.inAddressRs485 = &nviAddressRs485;
-
-//    _cover.outCoverControl = &nvoCoverControl;
-    _cover.inTiltValue = &nviTiltValue;
-    _cover.inTiltCount = &nviTiltCount;
-    _cover.inTiltAlarm = &nviTiltAlarm;
-
-    _cover.inHitValue = &nviHitValue;
-    _cover.inHitCount = &nviHitCount;
-
-    _cover.inLocked = &nviLocked;
-    _cover.inUnlockedCount = &nviUnlockedCount;
-
-    _cover.inActive = &nviActive;
-    _cover.inUpdateOn = &nviUpdateOn;
 }
 
 when (usart_available()) {
@@ -285,13 +293,19 @@ when (usart_available()) {
 			cs_calc += *(cache_rx + 4 + i);
 		cs_recv = cache_rx[cache_rx[1]+4];
 		address_recv = cache_rx[5];
-		len = cache_rx[1]+6;
+		len = cache_rx[1] + 6;
 	}
 
-	if (cs_calc == cs_recv &&
-			(address_recv == (uint8_t) *_cover.inAddressRs485 || address_recv == 0 || address_recv == 255)) {
-        init(&package_rx, cache_rx, len);
-		package_received = 1;
+	if (cs_calc == cs_recv && address_recv != 0) {
+
+        for ( i = 0; i < COVER_COUNT; i++) {
+            if (address_recv == (uint8_t) *_cover[i].inAddressRs485) {
+                init(&package_rx, cache_rx, len);
+                package_received = 1;
+                package_index = i;
+                break;
+            }
+        }
 	}
 
 	memcpy(cache_rx, cache_rx + 1, 4);
@@ -304,9 +318,14 @@ far const uint8_t EVENT_INDEX[3][2] = {{0x01, 0x06}, {0x02, 0x06}, {0x03, 0x06}}
 
 when (package_received) {
     uint8_t status;
+    Cover * p;
     package_received = 0;
 
-    if (nviActive.state == 0) return;
+    if (package_index == 0) return;
+    if (package_index >= COVER_COUNT) return;
+
+    p = _cover + package_index;
+    if ((*p->inActive).state == 0) return;
 
     switch (getFunctionCode(&package_rx)) {
     case 0x03:
@@ -316,9 +335,9 @@ when (package_received) {
         onRequest6804();
         break;
     case 0x0b:
-        initFrame68(&package_tx, 0x08, (uint8_t) *_cover.inAddressRs485);
+        initFrame68(&package_tx, 0x08, (uint8_t) *p->inAddressRs485);
 
-        if (_cover.hit_count ==0 && _cover.tilt_count == 0 && _cover.open_count == 0) {
+        if (p->hit_count ==0 && p->tilt_count == 0 && p->open_count == 0) {
             appendFrame68(&package_tx, ASDU_HEAD_100B, 6);
             appendFrame68(&package_tx, ARGUMENT_INDEX[0], 2);
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviTiltValue, 4);
@@ -326,41 +345,41 @@ when (package_received) {
             appendFrame68Reverse(&package_tx, (uint8_t *)&nviHitValue, 4);
             appendFrame68(&package_tx, ARGUMENT_INDEX[2], 2);
             status = 0;
-            status |= _cover.hit_count? 0x01: 0x00;
-            status |= nviTiltAlarm.state == 1? 0x02:0x00;
-            status |= nviLocked.state == 1? 0x04:0x00;
+            status |= p->hit_count? 0x01: 0x00;
+            status |= (*p->inTiltAlarm).state == 1? 0x02:0x00;
+            status |= (*p->inLocked).state == 1? 0x04:0x00;
             appendByteToFrame68(&package_tx, status);
             appendByteToFrame68(&package_tx, 0x00);
             appendByteToFrame68(&package_tx, 0x00);
             appendByteToFrame68(&package_tx, 0x00);
         } else {
             appendFrame68(&package_tx, ASDU_HEAD_6808, 7);
-            if (_cover.hit_count) {
+            if (p->hit_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[0], 2);
-                appendByteToFrame68(&package_tx, nviUpdateOn.second);
-                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
-                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_cover.hit_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&_cover.hit_value, 4);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendByteToFrame68(&package_tx, p->hit_count);
+                appendFrame68Reverse(&package_tx, (uint8_t *)(&(p->hit_value)), 4);
                 package_tx.buff[7]++;
             }
 
-            if (_cover.tilt_count) {
+            if (p->tilt_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[1], 2);
-                appendByteToFrame68(&package_tx, nviUpdateOn.second);
-                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
-                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_cover.tilt_count);
-                appendFrame68Reverse(&package_tx, (uint8_t *)&_cover.tilt_value, 4);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendByteToFrame68(&package_tx, p->tilt_count);
+                appendFrame68Reverse(&package_tx, (uint8_t *)(&(p->tilt_value)), 4);
                 package_tx.buff[7]++;
             }
 
-            if (_cover.open_count) {
+            if (p->open_count) {
                 appendFrame68(&package_tx, EVENT_INDEX[2], 2);
-                appendByteToFrame68(&package_tx, nviUpdateOn.second);
-                appendByteToFrame68(&package_tx, nviUpdateOn.minute);
-                appendByteToFrame68(&package_tx, nviUpdateOn.hour);
-                appendByteToFrame68(&package_tx, (uint8_t)_cover.open_count);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).second);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).minute);
+                appendByteToFrame68(&package_tx, (*p->inUpdateOn).hour);
+                appendByteToFrame68(&package_tx, p->open_count);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
                 appendByteToFrame68(&package_tx, 0x00);
@@ -368,12 +387,12 @@ when (package_received) {
                 package_tx.buff[7]++;
             }
 
-            _cover.open_count = 0;
-            _cover.tilt_count = 0;
-            _cover.hit_count = 0;
+            p->open_count = 0;
+            p->tilt_count = 0;
+            p->hit_count = 0;
 
-            _cover.hit_value = fl_zero;
-            _cover.tilt_value = fl_zero;
+            p->hit_value = fl_zero;
+            p->tilt_value = fl_zero;
         }
 
         completeFrame68(&package_tx);
@@ -388,25 +407,29 @@ when (package_received) {
 }
 
 when (nv_update_occurs(nviUpdateOn)) {
-    if (_cover.tilt_count == 0 && nviTiltCount > 0)
-        _cover.tilt_count = 1;
 
-    _cover.tilt_count += (uint8_t)(nviTiltCount < 2 ? 0: (nviTiltCount - 1));
+    Cover *p;
+    p = _cover + nv_array_index;
 
-    if (_cover.hit_count == 0 && nviHitCount > 0)
-        _cover.hit_count = 0;
+    if (p->tilt_count == 0 && *p->inTiltCount > 0)
+        p->tilt_count = 1;
 
-    _cover.hit_count += (uint8_t)(nviHitCount < 2 ? 0: (nviHitCount - 1));
+    p->tilt_count += (uint8_t)(*p->inTiltCount < 2 ? 0: (*p->inTiltCount - 1));
 
-    if (_cover.open_count == 0 && nviUnlockedCount > 0)
-        _cover.open_count = 1;
+    if (p->hit_count == 0 && *p->inHitCount > 0)
+        p->hit_count = 0;
 
-    _cover.open_count += (uint8_t)(nviUnlockedCount < 2 ? 0: (nviUnlockedCount - 1));
+    p->hit_count += (uint8_t)(*p->inHitCount < 2 ? 0: (*p->inHitCount - 1));
 
-	fl_max(&_cover.tilt_value, &nviTiltValue, &_cover.tilt_value);
-	fl_max(&_cover.hit_value, &nviHitValue, &_cover.hit_value);
+    if (p->open_count == 0 && *p->inUnlockedCount > 0)
+        p->open_count = 1;
+
+    p->open_count += (uint8_t)(*p-> inUnlockedCount < 2 ? 0: (*p-> inUnlockedCount - 1));
+
+	fl_max(&p->tilt_value, p->inTiltValue, &p->tilt_value);
+	fl_max(&p->hit_value, p->inHitValue, &p->hit_value);
 }
-
+/*
 void onRequest6803() {
     switch (getAsduHead(&package_rx)->typ) {
     case 0X07 :
@@ -441,7 +464,7 @@ void refresh() {
         }
     }
 }
-
+*/
 //
 // when(offline) executes as the device enters the offline state.
 // Make sure to keep this task short, as the state change can
