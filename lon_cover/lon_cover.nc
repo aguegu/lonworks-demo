@@ -195,7 +195,7 @@ far Record package_rx;
 
 network input SNVT_time_stamp nviLastTiming;
 
-network input SNVT_count nviAddressRs485 = 8;
+network input SNVT_count nviAddressRs485;
 network input SNVT_switch nviCoverControl;
 
 network output SNVT_angle_f nvoTiltValue;
@@ -210,6 +210,8 @@ network output SNVT_count nvoUnlockedCount;
 
 network output SNVT_switch nvoActive;
 network output SNVT_date_time nvoUpdateOn;
+
+eeprom uint8_t eepAddress;
 
 void handlePackage(void);
 
@@ -226,7 +228,12 @@ void handlePackage(void);
 when (reset) {
     initAllFblockData(TOTAL_FBLOCK_COUNT);
     executeOnEachFblock(0, FBC_WHEN_RESET);
+    nviAddressRs485 = eepAddress;
     tim = 2;
+}
+
+when (nv_update_occurs(nviAddressRs485)) {
+    eepAddress = (uint8_t)nviAddressRs485;
 }
 
 void inquire() {

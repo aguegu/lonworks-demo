@@ -6,6 +6,9 @@ import threading
 import time
 
 class Daemon:
+	"""
+	server
+	"""
 	def __init__(self):
 		sp = serial.Serial();
 		sp.port = '/dev/ttyUSB0'
