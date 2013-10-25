@@ -200,6 +200,8 @@ network input SNVT_count nviUnlockedCount[COVER_COUNT];
 network input SNVT_switch nviActive[COVER_COUNT];
 network input SNVT_date_time nviUpdateOn[COVER_COUNT];
 
+eeprom uint8_t eepAddress[COVER_COUNT];
+
 typedef struct {
     uint8_t tilt_count;
     uint8_t hit_count;
@@ -245,6 +247,8 @@ void initCover() {
     uint8_t i;
 
     for (i = 0; i < COVER_COUNT; i++) {
+        nviAddressRs485[i] = eepAddress[i];
+
         _cover[i].inAddressRs485 = nviAddressRs485 + i;
         _cover[i].inTiltValue = nviTiltValue + i;
         _cover[i].inTiltCount = nviTiltCount + i;
@@ -270,6 +274,11 @@ when (reset) {
     usart_init();
     initCover();
 }
+
+when (nv_update_occurs(nviAddressRs485)) {
+    eepAddress[nv_array_index] = (uint8_t)nviAddressRs485[nv_array_index];
+}
+
 
 when (usart_available()) {
 	uint8_t cs_calc, cs_recv, i, len, address_recv;
